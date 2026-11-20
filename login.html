@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -46,8 +46,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js"></script>
+    <script src="auth.js?v=5"></script>
     <script>
+        const authInstance = typeof auth !== 'undefined' && auth ? auth : firebase.auth();
+
         if (getCurrentUsername()) {
             window.location.href = 'profile.html';
         }
@@ -69,7 +71,6 @@
             try {
                 let userDoc = null;
 
-                // Ищем пользователя в Firestore по логину или по email
                 if (loginInput.includes('@')) {
                     const snap = await db.collection('users').where('email', '==', loginInput.toLowerCase()).limit(1).get();
                     if (!snap.empty) {
@@ -92,9 +93,8 @@
 
                 const userData = userDoc.data();
 
-                // Если аккаунт зарегистрирован через Firebase Auth (есть поле uid) — проверяем подтверждение почты
                 if (userData.uid && userData.email) {
-                    const cred = await auth.signInWithEmailAndPassword(userData.email, password);
+                    const cred = await authInstance.signInWithEmailAndPassword(userData.email, password);
 
                     if (!cred.user.emailVerified) {
                         messageBox.innerHTML = `
@@ -114,18 +114,16 @@
                             }
                         };
 
-                        await auth.signOut();
+                        await authInstance.signOut();
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Войти';
                         return;
                     }
 
-                    // Помечаем в Firestore, что почта подтверждена
                     if (!userData.emailVerified) {
                         await db.collection('users').doc(userDoc.id).update({ emailVerified: true });
                     }
                 } else {
-                    // Совместимость со старыми аккаунтами (например, @admin), созданными до включения Email Verification
                     if (userData.password !== password) {
                         messageBox.textContent = 'Неверный пароль!';
                         messageBox.className = 'form-message error';
