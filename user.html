@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль участника — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
     <style>
         .public-profile-card {
             max-width: 480px;
@@ -44,24 +44,25 @@
 
         .public-username {
             margin: 0 0 6px 0;
-            font-size: 23px;
+            font-size: 25px;
             color: #ffffff;
             text-shadow: 0 0 10px rgba(220, 20, 60, 0.65);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .public-username span.at-sign {
-            color: #ff6b81;
+            gap: 6px;
         }
 
         .public-reg-date {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.58);
             margin: 0 0 18px 0;
+        }
+
+        .public-reg-date span.handle-tag {
+            color: #ff6b81;
+            font-weight: 600;
         }
 
         .public-stats-grid {
@@ -178,7 +179,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=8"></script>
+    <script src="auth.js?v=9"></script>
     <script>
         const profileBox = document.getElementById('public-profile-box');
         const params = new URLSearchParams(window.location.search);
@@ -212,7 +213,8 @@
                 }
 
                 const user = doc.data();
-                document.title = `@${user.username} — Знакомства Алушта Girls`;
+                const mainName = getPublicDisplayName(user);
+                document.title = `${mainName} — Знакомства Алушта Girls`;
 
                 const isTargetAdmin = (typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase())) ||
                                       (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
@@ -225,8 +227,8 @@
                 const frameClass = typeof getAvatarFrameClass === 'function' ? getAvatarFrameClass(user) : '';
 
                 const avatarHtml = user.avatar
-                    ? `<img src="${user.avatar}" alt="${user.username}">`
-                    : user.username.charAt(0).toUpperCase();
+                    ? `<img src="${user.avatar}" alt="${mainName}">`
+                    : mainName.charAt(0).toUpperCase();
 
                 const bioText = user.bio && user.bio.trim() !== ''
                     ? user.bio
@@ -243,14 +245,10 @@
 
                 const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
 
-                const displayTitle = user.displayName
-                    ? `${user.displayName} (<span class="at-sign">@</span>${user.username})`
-                    : `<span class="at-sign">@</span>${user.username}`;
-
                 profileBox.innerHTML = `
                     <div class="public-avatar ${frameClass}">${avatarHtml}</div>
-                    <h2 class="public-username">${displayTitle}${adminBadge}${titleBadge}</h2>
-                    <p class="public-reg-date">На сайте с: ${user.regDate || 'недавно'}</p>
+                    <h2 class="public-username">${mainName}${adminBadge}${titleBadge}</h2>
+                    <p class="public-reg-date"><span class="handle-tag">@${user.username}</span> • На сайте с: ${user.regDate || 'недавно'}</p>
 
                     <div class="public-stats-grid">
                         <div class="stat-pill-box">
@@ -299,14 +297,11 @@
                         const meKey = currentUsername.toLowerCase();
 
                         if (likedByUsers.includes(meKey)) {
-                            // Убираем лайк (очки не начисляются; если лайк был активным — списываем выданный бонус)
-                            const updates = {
+                            await userDocRef.update({
                                 likedByUsers: firebase.firestore.FieldValue.arrayRemove(meKey),
                                 profileLikes: firebase.firestore.FieldValue.increment(-1)
-                            };
-                            await userDocRef.update(updates);
+                            });
                         } else {
-                            // Ставим лайк; бонусные очки выдаём только 1 раз в жизни от этого аккаунта
                             const alreadyRewarded = rewardedByUsers.includes(meKey);
                             const updates = {
                                 likedByUsers: firebase.firestore.FieldValue.arrayUnion(meKey),
@@ -338,7 +333,7 @@
                     delBtn.className = 'btn-danger';
                     delBtn.textContent = '👑 Удалить аккаунт';
                     delBtn.onclick = async () => {
-                        if (confirm(`Удалить аккаунт @${user.username}?`)) {
+                        if (confirm(`Удалить аккаунт ${mainName} (@${user.username})?`)) {
                             await userDocRef.delete();
                             alert('Аккаунт удалён.');
                             window.location.href = 'index.html';
