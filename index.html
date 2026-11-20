@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
     <style>
-        /* Две главные кнопки действий */
         .hero-action-buttons {
             display: flex;
             justify-content: center;
@@ -65,7 +64,6 @@
             box-shadow: 0 0 28px rgba(220, 20, 60, 0.85);
         }
 
-        /* Блок поиска пользователей */
         .user-search-box {
             max-width: 500px;
             margin: 0 auto 30px auto;
@@ -221,10 +219,13 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
+            gap: 5px;
         }
 
-        .found-user-name span.at-sign {
-            color: #ff6b81;
+        .secondary-handle {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.48);
         }
 
         .found-user-date {
@@ -367,16 +368,13 @@
         }
 
         .lb-username {
-            font-size: 14.5px;
+            font-size: 15px;
             font-weight: 700;
             color: #ffffff;
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-        }
-
-        .lb-username span.at-sign {
-            color: #ff6b81;
+            gap: 4px;
         }
 
         .lb-subtext {
@@ -423,21 +421,21 @@
             <a href="about.html" class="hero-btn-dating">♥ Начать просмотр анкет</a>
         </div>
 
-        <!-- Раскрывающийся блок поиска пользователей по username -->
+        <!-- Раскрывающийся блок поиска пользователей -->
         <section class="user-search-box" id="user-search-box" style="display: none;">
             <div class="search-box-header">
                 <h2>Поиск участников</h2>
                 <button type="button" class="close-search-panel" id="close-search-panel" title="Закрыть поиск">✕</button>
             </div>
-            <p class="search-subtitle">Введите логин пользователя (@username), чтобы открыть его профиль</p>
+            <p class="search-subtitle">Введите имя участника или его @логин, чтобы открыть профиль</p>
 
             <div class="search-input-wrap">
-                <input type="text" id="username-search-input" placeholder="Например: @admin или alina..." autocomplete="off">
+                <input type="text" id="username-search-input" placeholder="Например: Skeezy или @admin..." autocomplete="off">
                 <button type="button" class="clear-search-btn" id="clear-search-btn" title="Очистить">✕</button>
             </div>
 
             <div class="search-results-list" id="search-results-list">
-                <p class="search-placeholder-msg">Начните вводить никнейм для поиска...</p>
+                <p class="search-placeholder-msg">Начните вводить имя или никнейм для поиска...</p>
             </div>
         </section>
 
@@ -475,7 +473,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=8"></script>
+    <script src="auth.js?v=9"></script>
     <script>
         const toggleSearchBtn = document.getElementById('toggle-search-btn');
         const closeSearchPanelBtn = document.getElementById('close-search-panel');
@@ -583,6 +581,7 @@
                 else if (idx === 2) rankEl.textContent = '🥉';
                 else rankEl.textContent = `#${idx + 1}`;
 
+                const mainName = getPublicDisplayName(user);
                 const frameClass = typeof getAvatarFrameClass === 'function' ? getAvatarFrameClass(user) : '';
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'found-user-avatar ' + frameClass;
@@ -592,10 +591,10 @@
                 if (user.avatar) {
                     const img = document.createElement('img');
                     img.src = user.avatar;
-                    img.alt = user.username;
+                    img.alt = mainName;
                     avatarDiv.appendChild(img);
                 } else {
-                    avatarDiv.textContent = user.username.charAt(0).toUpperCase();
+                    avatarDiv.textContent = mainName.charAt(0).toUpperCase();
                 }
 
                 const metaDiv = document.createElement('div');
@@ -605,13 +604,17 @@
                                       (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
 
                 const adminBadgeHtml = isTargetAdmin
-                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 5px; margin-left: 5px;">ADMIN</span>'
+                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 5px;">ADMIN</span>'
                     : '';
                 const titleBadgeHtml = typeof renderUserTitleBadge === 'function' ? renderUserTitleBadge(user, true) : '';
 
+                const handleTag = (user.displayName && user.displayName.trim().toLowerCase() !== user.username.toLowerCase())
+                    ? `<span class="secondary-handle">@${user.username}</span>`
+                    : '';
+
                 const nameEl = document.createElement('div');
                 nameEl.className = 'lb-username';
-                nameEl.innerHTML = `<span class="at-sign">@</span>${user.username}${adminBadgeHtml}${titleBadgeHtml}`;
+                nameEl.innerHTML = `<span>${mainName}</span>${handleTag}${adminBadgeHtml}${titleBadgeHtml}`;
 
                 const subEl = document.createElement('div');
                 subEl.className = 'lb-subtext';
@@ -643,20 +646,22 @@
 
             if (!cleanQuery) {
                 clearBtn.style.display = 'none';
-                resultsList.innerHTML = '<p class="search-placeholder-msg">Начните вводить никнейм для поиска...</p>';
+                resultsList.innerHTML = '<p class="search-placeholder-msg">Начните вводить имя или никнейм для поиска...</p>';
                 return;
             }
 
             clearBtn.style.display = 'block';
 
-            const matches = allUsersCache.filter(user =>
-                user.username && user.username.toLowerCase().includes(cleanQuery)
-            );
+            const matches = allUsersCache.filter(user => {
+                const uMatch = user.username && user.username.toLowerCase().includes(cleanQuery);
+                const dMatch = user.displayName && user.displayName.toLowerCase().includes(cleanQuery);
+                return uMatch || dMatch;
+            });
 
             resultsList.innerHTML = '';
 
             if (matches.length === 0) {
-                resultsList.innerHTML = `<p class="search-placeholder-msg">Пользователь «@${cleanQuery}» не найден.</p>`;
+                resultsList.innerHTML = `<p class="search-placeholder-msg">Участник «${cleanQuery}» не найден.</p>`;
                 return;
             }
 
@@ -665,16 +670,17 @@
                 card.className = 'found-user-card';
                 card.href = `user.html?u=${encodeURIComponent(user.username)}`;
 
+                const mainName = getPublicDisplayName(user);
                 const frameClass = typeof getAvatarFrameClass === 'function' ? getAvatarFrameClass(user) : '';
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'found-user-avatar ' + frameClass;
                 if (user.avatar) {
                     const img = document.createElement('img');
                     img.src = user.avatar;
-                    img.alt = user.username;
+                    img.alt = mainName;
                     avatarDiv.appendChild(img);
                 } else {
-                    avatarDiv.textContent = user.username.charAt(0).toUpperCase();
+                    avatarDiv.textContent = mainName.charAt(0).toUpperCase();
                 }
 
                 const infoDiv = document.createElement('div');
@@ -689,11 +695,15 @@
                                       (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
 
                 const adminBadgeHtml = isTargetAdmin
-                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 8px rgba(220, 20, 60, 0.7); font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 5px; margin-left: 5px;">ADMIN</span>'
+                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 8px rgba(220, 20, 60, 0.7); font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 5px;">ADMIN</span>'
                     : '';
                 const titleBadgeHtml = typeof renderUserTitleBadge === 'function' ? renderUserTitleBadge(user, true) : '';
 
-                nameEl.innerHTML = `<span class="at-sign">@</span>${user.username}${adminBadgeHtml}${titleBadgeHtml}`;
+                const handleTag = (user.displayName && user.displayName.trim().toLowerCase() !== user.username.toLowerCase())
+                    ? `<span class="secondary-handle">@${user.username}</span>`
+                    : '';
+
+                nameEl.innerHTML = `<span>${mainName}</span>${handleTag}${adminBadgeHtml}${titleBadgeHtml}`;
 
                 const dateEl = document.createElement('span');
                 dateEl.className = 'found-user-date';
