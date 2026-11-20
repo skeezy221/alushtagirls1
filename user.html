@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль участника — Знакомства Алушта Girls</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .public-profile-card {
+            max-width: 480px;
+            margin: 25px auto 35px auto;
+            background: rgba(12, 12, 18, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(220, 20, 60, 0.5);
+            border-radius: 22px;
+            padding: 28px 24px;
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.85), 0 0 24px rgba(220, 20, 60, 0.22);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .public-avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            margin: 0 auto 16px auto;
+            background: linear-gradient(135deg, #dc143c, #8b0000);
+            border: 3px solid #dc143c;
+            box-shadow: 0 0 20px rgba(220, 20, 60, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            font-weight: 800;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .public-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .public-username {
+            margin: 0 0 6px 0;
+            font-size: 24px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(220, 20, 60, 0.65);
+        }
+
+        .public-username span {
+            color: #ff6b81;
+        }
+
+        .public-reg-date {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.58);
+            margin: 0 0 20px 0;
+        }
+
+        .public-bio-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 14px 16px;
+            text-align: left;
+            margin-bottom: 22px;
+        }
+
+        .public-bio-label {
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #ff6b81;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .public-bio-text {
+            margin: 0;
+            font-size: 14.5px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .public-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="site-logo">AlushtaGirls</div>
+    </header>
+
+    <main>
+        <h1>Профиль участника</h1>
+
+        <section class="public-profile-card" id="public-profile-box">
+            <p style="color: #ccc;">Загрузка профиля...</p>
+        </section>
+
+        <nav>
+            <a href="index.html">Главная</a>
+            <a href="about.html">Girls From Alushta</a>
+            <a href="contacts.html">Поддержка</a>
+            <a href="baze.html">FAQ</a>
+            <a href="registr.html">Регистрация</a>
+        </nav>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        const profileBox = document.getElementById('public-profile-box');
+        const params = new URLSearchParams(window.location.search);
+        const targetUsername = (params.get('u') || '').trim();
+        const currentUsername = getCurrentUsername();
+
+        async function loadPublicProfile() {
+            if (!targetUsername) {
+                profileBox.innerHTML = `
+                    <p style="color: #ff6b81; margin-bottom: 16px;">Пользователь не указан.</p>
+                    <a href="index.html" class="btn-submit">Вернуться к поиску</a>
+                `;
+                return;
+            }
+
+            // Если открыли свой же профиль — перенаправляем в личный кабинет
+            if (currentUsername && currentUsername.toLowerCase() === targetUsername.toLowerCase()) {
+                window.location.href = 'profile.html';
+                return;
+            }
+
+            try {
+                const doc = await db.collection('users').doc(targetUsername.toLowerCase()).get();
+
+                if (!doc.exists) {
+                    profileBox.innerHTML = `
+                        <p style="color: #ff6b81; margin-bottom: 16px;">Пользователь «@${targetUsername}» не найден.</p>
+                        <a href="index.html" class="btn-submit">← Назад к поиску</a>
+                    `;
+                    return;
+                }
+
+                const user = doc.data();
+                document.title = `@${user.username} — Знакомства Алушта Girls`;
+
+                const isTargetAdmin = typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase());
+                const adminBadge = isTargetAdmin
+                    ? ' <span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 6px; vertical-align: middle;">ADMIN</span>'
+                    : '';
+
+                const avatarHtml = user.avatar
+                    ? `<img src="${user.avatar}" alt="${user.username}">`
+                    : user.username.charAt(0).toUpperCase();
+
+                const bioText = user.bio && user.bio.trim() !== ''
+                    ? user.bio
+                    : 'Пользователь пока не добавил информацию о себе.';
+
+                const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
+
+                profileBox.innerHTML = `
+                    <div class="public-avatar">${avatarHtml}</div>
+                    <h2 class="public-username"><span>@</span>${user.username}${adminBadge}</h2>
+                    <p class="public-reg-date">На сайте с: ${user.regDate || 'недавно'}</p>
+
+                    <div class="public-bio-box">
+                        <div class="public-bio-label">О себе</div>
+                        <p class="public-bio-text" id="public-bio-content"></p>
+                    </div>
+
+                    <div class="public-actions" id="public-actions">
+                        <a href="index.html" class="btn-outline">← К поиску</a>
+                        <a href="contacts.html?report=${encodeURIComponent('@' + user.username)}" class="btn-outline" style="border-color: rgba(255, 77, 109, 0.6); color: #ff6b81;">🚨 Пожаловаться</a>
+                    </div>
+                `;
+
+                document.getElementById('public-bio-content').textContent = bioText;
+
+                // Админская кнопка удаления аккаунта прямо со страницы профиля
+                if (hasAdminAccess) {
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'btn-danger';
+                    delBtn.textContent = '👑 Удалить аккаунт';
+                    delBtn.onclick = async () => {
+                        if (confirm(`Удалить аккаунт @${user.username}?`)) {
+                            await db.collection('users').doc(doc.id).delete();
+                            alert('Аккаунт удалён.');
+                            window.location.href = 'index.html';
+                        }
+                    };
+                    document.getElementById('public-actions').appendChild(delBtn);
+                }
+            } catch (err) {
+                console.error(err);
+                profileBox.innerHTML = `<p style="color: #ff6b81;">Ошибка при загрузке профиля.</p>`;
+            }
+        }
+
+        loadPublicProfile();
+    </script>
+
+</body>
+</html>
