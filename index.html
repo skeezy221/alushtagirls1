@@ -5,6 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Знакомства Алушта Girls</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .user-search-box {
+            max-width: 480px;
+            margin: 28px auto 35px auto;
+            background: rgba(12, 12, 18, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(220, 20, 60, 0.45);
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(220, 20, 60, 0.18);
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        .user-search-box h2 {
+            margin: 0 0 6px 0;
+            font-size: 19px;
+            color: #ffffff;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(220, 20, 60, 0.6);
+        }
+
+        .search-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.68);
+            text-align: center;
+            margin: 0 0 16px 0;
+        }
+
+        .search-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input-wrap input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(220, 20, 60, 0.55);
+            background: rgba(18, 18, 26, 0.95);
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-input-wrap input:focus {
+            border-color: #ff2e55;
+            box-shadow: 0 0 14px rgba(220, 20, 60, 0.45);
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .clear-search-btn:hover {
+            color: #ff4d6d;
+        }
+
+        .search-results-list {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 340px;
+            overflow-y: auto;
+        }
+
+        .found-user-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(220, 20, 60, 0.35);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .found-user-card:hover {
+            transform: translateY(-2px);
+            border-color: #dc143c;
+            box-shadow: 0 4px 16px rgba(220, 20, 60, 0.3);
+        }
+
+        .found-user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dc143c, #8b0000);
+            border: 2px solid #dc143c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .found-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .found-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .found-user-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .found-user-name {
+            font-size: 15.5px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .found-user-name span {
+            color: #ff6b81;
+        }
+
+        .found-user-date {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .found-user-bio {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .search-placeholder-msg {
+            text-align: center;
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.55);
+            margin: 8px 0 0 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,10 +176,25 @@
         <h1>Знакомства Алушта Girls</h1>
         <p>Общение, новые встречи и атмосфера побережья Алушты.</p>
 
+        <!-- Блок поиска пользователей по username -->
+        <section class="user-search-box">
+            <h2>🔍 Поиск участников</h2>
+            <p class="search-subtitle">Введите логин пользователя (@username), чтобы найти его профиль</p>
+
+            <div class="search-input-wrap">
+                <input type="text" id="username-search-input" placeholder="Например: @admin или alina..." autocomplete="off">
+                <button type="button" class="clear-search-btn" id="clear-search-btn" title="Очистить">✕</button>
+            </div>
+
+            <div class="search-results-list" id="search-results-list">
+                <p class="search-placeholder-msg">Начните вводить никнейм для поиска...</p>
+            </div>
+        </section>
+
         <nav>
             <a href="index.html">Главная</a>
             <a href="about.html">Girls From Alushta</a>
-            <a href="contacts.html">Сугубое мнение</a>
+            <a href="contacts.html">Поддержка</a>
             <a href="baze.html">FAQ</a> 
             <a href="registr.html">Регистрация</a>
         </nav>
@@ -28,5 +203,105 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="auth.js"></script>
+    <script>
+        const searchInput = document.getElementById('username-search-input');
+        const clearBtn = document.getElementById('clear-search-btn');
+        const resultsList = document.getElementById('search-results-list');
+
+        let allUsersCache = [];
+
+        // Загружаем список пользователей из облака для мгновенного поиска без задержек
+        db.collection('users').onSnapshot(snapshot => {
+            allUsersCache = [];
+            snapshot.forEach(doc => {
+                allUsersCache.push(doc.data());
+            });
+            if (searchInput.value.trim() !== '') {
+                renderSearchResults(searchInput.value);
+            }
+        });
+
+        function renderSearchResults(rawQuery) {
+            const cleanQuery = rawQuery.trim().replace(/^@+/, '').toLowerCase();
+
+            if (!cleanQuery) {
+                clearBtn.style.display = 'none';
+                resultsList.innerHTML = '<p class="search-placeholder-msg">Начните вводить никнейм для поиска...</p>';
+                return;
+            }
+
+            clearBtn.style.display = 'block';
+
+            const matches = allUsersCache.filter(user =>
+                user.username && user.username.toLowerCase().includes(cleanQuery)
+            );
+
+            resultsList.innerHTML = '';
+
+            if (matches.length === 0) {
+                resultsList.innerHTML = `<p class="search-placeholder-msg">Пользователь «@${cleanQuery}» не найден.</p>`;
+                return;
+            }
+
+            matches.forEach(user => {
+                const card = document.createElement('div');
+                card.className = 'found-user-card';
+
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'found-user-avatar';
+                if (user.avatar) {
+                    const img = document.createElement('img');
+                    img.src = user.avatar;
+                    img.alt = user.username;
+                    avatarDiv.appendChild(img);
+                } else {
+                    avatarDiv.textContent = user.username.charAt(0).toUpperCase();
+                }
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'found-user-info';
+
+                const topRow = document.createElement('div');
+                topRow.className = 'found-user-top';
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'found-user-name';
+                const isTargetAdmin = typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase());
+                nameEl.innerHTML = `<span>@</span>${user.username}` + (isTargetAdmin
+                    ? ' <span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 5px; margin-left: 4px;">ADMIN</span>'
+                    : '');
+
+                const dateEl = document.createElement('span');
+                dateEl.className = 'found-user-date';
+                dateEl.textContent = user.regDate ? `с ${user.regDate}` : '';
+
+                topRow.appendChild(nameEl);
+                topRow.appendChild(dateEl);
+
+                const bioEl = document.createElement('p');
+                bioEl.className = 'found-user-bio';
+                bioEl.textContent = user.bio && user.bio.trim() !== ''
+                    ? user.bio
+                    : 'Статус пока не указан';
+
+                infoDiv.appendChild(topRow);
+                infoDiv.appendChild(bioEl);
+
+                card.appendChild(avatarDiv);
+                card.appendChild(infoDiv);
+                resultsList.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            renderSearchResults(e.target.value);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            renderSearchResults('');
+            searchInput.focus();
+        });
+    </script>
 </body>
 </html>
