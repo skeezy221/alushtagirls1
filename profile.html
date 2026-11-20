@@ -132,7 +132,7 @@
         <nav>
             <a href="index.html">На главную</a>
             <a href="about.html">Girls From Alushta</a>
-            <a href="contacts.html">Сугубое мнение</a>
+            <a href="contacts.html">Поддержка</a>
             <a href="baze.html">FAQ</a>
             <a href="registr.html">Регистрация</a>
         </nav>
@@ -247,12 +247,12 @@
                 logoutUser();
             });
 
-            // Объединяем недавние действия из «Сугубого мнения» и «Girls From Alushta»
-            let recentOpinions = [];
+            // Объединяем недавние действия на сайте («Girls From Alushta» и «Поддержка»)
+            let recentSupport = [];
             let recentGirls = [];
 
             function renderAllActivity() {
-                const combined = [...recentOpinions, ...recentGirls]
+                const combined = [...recentGirls, ...recentSupport]
                     .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
                     .slice(0, 15);
 
@@ -302,24 +302,6 @@
                 });
             }
 
-            // Слушаем посты из «Сугубого мнения»
-            db.collection('opinions').orderBy('createdAt', 'desc').limit(10).onSnapshot(snapshot => {
-                recentOpinions = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const author = data.author || 'Участник';
-                    recentOpinions.push({
-                        icon: '💬',
-                        titleHtml: `<span>@${author}</span> опубликовал(а) пост в «Сугубом мнении»`,
-                        previewText: data.text || '',
-                        date: data.date || '',
-                        createdAt: data.createdAt || 0,
-                        href: 'contacts.html'
-                    });
-                });
-                renderAllActivity();
-            });
-
             // Слушаем новые анкеты из «Girls From Alushta»
             db.collection('girls_profiles').orderBy('createdAt', 'desc').limit(10).onSnapshot(snapshot => {
                 recentGirls = [];
@@ -332,6 +314,27 @@
                         date: data.date || '',
                         createdAt: data.createdAt || 0,
                         href: 'about.html'
+                    });
+                });
+                renderAllActivity();
+            });
+
+            // Слушаем обращения в «Поддержку»
+            db.collection('support_tickets').orderBy('createdAt', 'desc').limit(10).onSnapshot(snapshot => {
+                recentSupport = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isReport = data.type === 'report';
+                    const sender = data.sender || 'Участник';
+                    recentSupport.push({
+                        icon: isReport ? '🚨' : '💬',
+                        titleHtml: isReport
+                            ? `<span>@${sender}</span> отправил(а) жалобу в «Поддержку»`
+                            : `<span>@${sender}</span> задал(а) вопрос в «Поддержке»`,
+                        previewText: isReport ? `На: ${data.target} — ${data.reason}` : (data.topic || data.text || ''),
+                        date: data.date || '',
+                        createdAt: data.createdAt || 0,
+                        href: 'contacts.html'
                     });
                 });
                 renderAllActivity();
