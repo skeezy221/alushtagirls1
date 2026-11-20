@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль участника — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
     <style>
         .public-profile-card {
             max-width: 480px;
@@ -152,6 +152,14 @@
             opacity: 0.6;
             cursor: wait;
         }
+
+        .like-feedback-banner {
+            margin-top: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2ee59d;
+            min-height: 18px;
+        }
     </style>
 </head>
 <body>
@@ -179,13 +187,14 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=9"></script>
+    <script src="auth.js?v=10"></script>
     <script>
         const profileBox = document.getElementById('public-profile-box');
         const params = new URLSearchParams(window.location.search);
         const targetUsername = (params.get('u') || '').trim();
         const currentUsername = getCurrentUsername();
         let isLikeProcessing = false;
+        let lastFeedbackText = '';
 
         function loadPublicProfile() {
             if (!targetUsername) {
@@ -277,6 +286,7 @@
                         <a href="index.html" class="btn-outline">← К поиску</a>
                         <a href="contacts.html?report=${encodeURIComponent('@' + user.username)}" class="btn-outline" style="border-color: rgba(255, 77, 109, 0.6); color: #ff6b81;">🚨 Пожаловаться</a>
                     </div>
+                    <div class="like-feedback-banner" id="like-feedback-banner">${lastFeedbackText}</div>
                 `;
 
                 document.getElementById('public-bio-content').textContent = bioText;
@@ -301,11 +311,16 @@
                                 likedByUsers: firebase.firestore.FieldValue.arrayRemove(meKey),
                                 profileLikes: firebase.firestore.FieldValue.increment(-1)
                             });
+                            lastFeedbackText = `Лайк с профиля ${mainName} снят.`;
+                            if (typeof showSiteToast === 'function') {
+                                showSiteToast(`Вы убрали лайк с профиля <strong>${mainName}</strong>.`);
+                            }
                         } else {
                             const alreadyRewarded = rewardedByUsers.includes(meKey);
                             const updates = {
                                 likedByUsers: firebase.firestore.FieldValue.arrayUnion(meKey),
-                                profileLikes: firebase.firestore.FieldValue.increment(1)
+                                profileLikes: firebase.firestore.FieldValue.increment(1),
+                                dismissedLikers: firebase.firestore.FieldValue.arrayRemove(meKey)
                             };
 
                             if (!alreadyRewarded) {
@@ -317,6 +332,12 @@
 
                             if (!alreadyRewarded && typeof addUserActivityPoints === 'function') {
                                 await addUserActivityPoints(currentUsername, 1);
+                            }
+
+                            const bonusNote = !alreadyRewarded ? ' (+1 ⚡ вам, +5 ⚡ участнику)' : '';
+                            lastFeedbackText = `✓ Вы лайкнули профиль ${mainName}${bonusNote}`;
+                            if (typeof showSiteToast === 'function') {
+                                showSiteToast(`Вы поставили лайк профилю <strong>${mainName}</strong>!${bonusNote}`);
                             }
                         }
                     } catch (err) {
