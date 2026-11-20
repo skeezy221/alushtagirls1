@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Girls From Alushta — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
     <style>
         .subtitle-muted {
             color: rgba(255, 255, 255, 0.8);
@@ -541,7 +541,7 @@
 
                 <div id="dating-message" class="form-message"></div>
 
-                <button type="submit" class="btn-pill" style="width: 100%; margin-top: 8px;" id="submit-card-btn">Опубликовать анкету</button>
+                <button type="submit" class="btn-pill" style="width: 100%; margin-top: 8px;" id="submit-card-btn">Опубликовать анкету (+15 ⚡)</button>
             </form>
 
             <!-- Колода карточек -->
@@ -572,14 +572,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=6"></script>
+    <script src="auth.js?v=7"></script>
     <script>
         const currentUsername = getCurrentUsername();
         const guestLock = document.getElementById('dating-guest-lock');
         const authorizedContent = document.getElementById('authorized-dating-content');
         const pageSubtitle = document.getElementById('page-subtitle');
 
-        // Жёсткая проверка: если пользователь не авторизован — закрываем анкеты и не грузим их из базы
         if (!currentUsername) {
             guestLock.style.display = 'block';
             authorizedContent.remove();
@@ -696,6 +695,11 @@
                         createdAt: Date.now()
                     });
 
+                    // Начисляем +15 очков активности за публикацию новой анкеты
+                    if (typeof addUserActivityPoints === 'function') {
+                        await addUserActivityPoints(currentUsername, 15);
+                    }
+
                     datingForm.reset();
                     compressedPhotoBase64 = '';
                     photoPreviewWrap.style.display = 'none';
@@ -709,7 +713,7 @@
                     datingMessage.className = 'form-message error';
                 } finally {
                     submitCardBtn.disabled = false;
-                    submitCardBtn.textContent = 'Опубликовать анкету';
+                    submitCardBtn.textContent = 'Опубликовать анкету (+15 ⚡)';
                 }
             });
 
@@ -720,6 +724,14 @@
                         await db.collection('girls_profiles').doc(cardData.id).update({
                             likedBy: firebase.firestore.FieldValue.arrayUnion(currentUsername)
                         });
+
+                        // Начисляем +2 очка за свайп Like и +5 очков автору анкеты
+                        if (typeof addUserActivityPoints === 'function') {
+                            await addUserActivityPoints(currentUsername, 2);
+                            if (cardData.ownerAccount && cardData.ownerAccount !== currentUsername.toLowerCase()) {
+                                await addUserActivityPoints(cardData.ownerAccount, 5);
+                            }
+                        }
                     } catch (e) {
                         console.error('Ошибка лайка:', e);
                     }
