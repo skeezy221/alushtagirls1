@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
     <style>
         .profile-card {
             position: relative;
@@ -34,6 +34,56 @@
             border-color: #dc143c;
             box-shadow: 0 0 14px rgba(220, 20, 60, 0.55);
             transform: rotate(90deg);
+        }
+
+        /* --- Красивая кнопка и зона загрузки аватара --- */
+        .avatar-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar {
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .profile-avatar:hover {
+            transform: scale(1.03);
+            filter: brightness(1.08);
+        }
+
+        .avatar-upload-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.22), rgba(255, 46, 85, 0.14));
+            border: 1px solid rgba(220, 20, 60, 0.65);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(220, 20, 60, 0.25);
+            transition: all 0.2s ease;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .avatar-upload-btn:hover {
+            background: linear-gradient(135deg, #dc143c, #ff2e55);
+            border-color: #ff758f;
+            transform: translateY(-1.5px);
+            box-shadow: 0 6px 16px rgba(220, 20, 60, 0.65);
+        }
+
+        .avatar-upload-btn:active {
+            transform: translateY(0);
         }
 
         /* --- Маленькая табличка входящих лайков (Симпатии) --- */
@@ -512,8 +562,8 @@
 
             <div class="profile-header-info">
                 <div class="avatar-upload-container">
-                    <div class="profile-avatar" id="profile-avatar">?</div>
-                    <label for="avatar-input" class="avatar-upload-btn" title="Загрузить фото">📷 Фото</label>
+                    <div class="profile-avatar" id="profile-avatar" title="Нажмите, чтобы выбрать фото">?</div>
+                    <label for="avatar-input" class="avatar-upload-btn" title="Загрузить новое фото">📷 Сменить фото</label>
                     <input type="file" id="avatar-input" accept="image/*" style="display: none;">
                 </div>
                 <div class="profile-details">
@@ -671,6 +721,11 @@
             let currentAvatarBase64 = '';
             let activeShopTab = 'titles';
 
+            // Клик по самой круглой аватарке тоже открывает выбор фото
+            avatarBox.addEventListener('click', () => {
+                avatarInput.click();
+            });
+
             toggleSettingsBtn.addEventListener('click', () => {
                 const isClosed = settingsDrawer.style.display === 'none';
                 settingsDrawer.style.display = isClosed ? 'block' : 'none';
@@ -730,7 +785,6 @@
                 applyAvatarAndFrame(currentAvatarBase64, mainName, loadedUserData);
             }
 
-            // Отрисовка таблички входящих лайков (Симпатии)
             async function renderLikesInbox(userData) {
                 const likers = Array.isArray(userData.likedByUsers) ? userData.likedByUsers : [];
                 const dismissed = Array.isArray(userData.dismissedLikers) ? userData.dismissedLikers : [];
@@ -804,7 +858,6 @@
                                     }
                                 }
 
-                                // Убираем уведомление из списка входящих
                                 await db.collection('users').doc(meKey).update({
                                     dismissedLikers: firebase.firestore.FieldValue.arrayUnion(senderKey)
                                 });
