@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Поддержка — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=7">
     <style>
         .support-wrapper {
             max-width: 520px;
             margin: 25px auto 35px auto;
         }
 
-        /* Переключатель вкладок */
         .support-tabs {
             display: flex;
             gap: 10px;
@@ -46,7 +45,6 @@
             box-shadow: 0 4px 15px rgba(220, 20, 60, 0.5);
         }
 
-        /* Карточка формы поддержки */
         .support-card {
             background: rgba(12, 12, 18, 0.9);
             border: 1px solid rgba(220, 20, 60, 0.45);
@@ -86,7 +84,6 @@
             box-shadow: 0 0 10px rgba(220, 20, 60, 0.4);
         }
 
-        /* Список отправленных обращений пользователя и панель модератора */
         .my-tickets-section {
             margin-top: 30px;
             text-align: left;
@@ -165,7 +162,6 @@
         <p>Связь с администрацией «Знакомства Алушта Girls» и модерация анкет.</p>
 
         <div class="support-wrapper">
-            <!-- Вкладки переключения -->
             <div class="support-tabs">
                 <button type="button" class="support-tab-btn active" id="tab-report-btn">🚨 Подать жалобу на пользователя</button>
                 <button type="button" class="support-tab-btn" id="tab-question-btn">💬 Задать вопрос администрации</button>
@@ -199,7 +195,7 @@
 
                 <div id="report-message" class="form-message"></div>
 
-                <button type="submit" class="btn-submit" style="width: 100%;" id="report-submit-btn">Отправить жалобу</button>
+                <button type="submit" class="btn-submit" style="width: 100%;" id="report-submit-btn">Отправить жалобу (+3 ⚡)</button>
             </form>
 
             <!-- Вкладка 2: Вопрос администрации -->
@@ -224,10 +220,9 @@
 
                 <div id="question-message" class="form-message"></div>
 
-                <button type="submit" class="btn-submit" style="width: 100%;" id="question-submit-btn">Отправить вопрос</button>
+                <button type="submit" class="btn-submit" style="width: 100%;" id="question-submit-btn">Отправить вопрос (+3 ⚡)</button>
             </form>
 
-            <!-- История обращений текущего пользователя / Панель модератора для admin -->
             <div class="my-tickets-section" id="my-tickets-section" style="display: none;">
                 <h3>Ваши отправленные обращения</h3>
                 <div id="my-tickets-list"></div>
@@ -244,8 +239,9 @@
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js"></script>
+    <script src="auth.js?v=7"></script>
     <script>
         const currentUsername = getCurrentUsername();
 
@@ -262,7 +258,13 @@
         const myTicketsSection = document.getElementById('my-tickets-section');
         const myTicketsList = document.getElementById('my-tickets-list');
 
-        // Переключение вкладок
+        // Если перешли по кнопке «Пожаловаться» из профиля — подставляем ник нарушителя
+        const urlParams = new URLSearchParams(window.location.search);
+        const prefillReport = urlParams.get('report');
+        if (prefillReport) {
+            document.getElementById('report-target').value = prefillReport;
+        }
+
         tabReportBtn.addEventListener('click', () => {
             tabReportBtn.classList.add('active');
             tabQuestionBtn.classList.remove('active');
@@ -279,7 +281,6 @@
             questionMessage.textContent = '';
         });
 
-        // Отправка жалобы на пользователя
         reportForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -306,8 +307,13 @@
                     createdAt: Date.now()
                 });
 
+                // Начисляем +3 очка активности за жалобу
+                if (currentUsername && typeof addUserActivityPoints === 'function') {
+                    await addUserActivityPoints(currentUsername, 3);
+                }
+
                 reportForm.reset();
-                reportMessage.textContent = 'Жалоба успешно отправлена администрации! Мы проверим анкету в ближайшее время.';
+                reportMessage.textContent = 'Жалоба успешно отправлена администрации! (+3 очка активности)';
                 reportMessage.className = 'form-message success';
             } catch (err) {
                 console.error(err);
@@ -315,11 +321,10 @@
                 reportMessage.className = 'form-message error';
             } finally {
                 reportSubmitBtn.disabled = false;
-                reportSubmitBtn.textContent = 'Отправить жалобу';
+                reportSubmitBtn.textContent = 'Отправить жалобу (+3 ⚡)';
             }
         });
 
-        // Отправка вопроса администрации
         questionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -346,8 +351,13 @@
                     createdAt: Date.now()
                 });
 
+                // Начисляем +3 очка активности за обращение
+                if (currentUsername && typeof addUserActivityPoints === 'function') {
+                    await addUserActivityPoints(currentUsername, 3);
+                }
+
                 questionForm.reset();
-                questionMessage.textContent = 'Ваш вопрос отправлен администрации!';
+                questionMessage.textContent = 'Ваш вопрос отправлен администрации! (+3 очка активности)';
                 questionMessage.className = 'form-message success';
             } catch (err) {
                 console.error(err);
@@ -355,11 +365,10 @@
                 questionMessage.className = 'form-message error';
             } finally {
                 questionSubmitBtn.disabled = false;
-                questionSubmitBtn.textContent = 'Отправить вопрос';
+                questionSubmitBtn.textContent = 'Отправить вопрос (+3 ⚡)';
             }
         });
 
-        // Для администратора показываем ВСЕ обращения с управлением; для обычных юзеров — только их собственные
         if (currentUsername) {
             const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
             const ticketsQuery = hasAdminAccess
@@ -410,7 +419,6 @@
                     card.querySelector('.ticket-target').textContent = titleLine;
                     card.querySelector('.ticket-text').textContent = item.text;
 
-                    // Админские кнопки модерации тикета
                     if (hasAdminAccess) {
                         const adminActions = document.createElement('div');
                         adminActions.style.cssText = 'display: flex; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);';
