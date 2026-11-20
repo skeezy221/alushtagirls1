@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
     <style>
         .profile-card {
             position: relative;
         }
 
-        /* Кнопка-шестерёнка в правом верхнем углу профиля */
         .settings-gear-btn {
             position: absolute;
             top: 18px;
@@ -37,7 +36,6 @@
             transform: rotate(90deg);
         }
 
-        /* Баланс очков и кнопка открытия мини-магазина */
         .shop-trigger-bar {
             display: flex;
             justify-content: space-between;
@@ -80,7 +78,6 @@
             box-shadow: 0 0 20px rgba(220, 20, 60, 0.8);
         }
 
-        /* Окно мини-магазина за очки */
         .mini-shop-drawer {
             margin-top: 16px;
             margin-bottom: 18px;
@@ -210,7 +207,6 @@
             border: 1px solid #2ee59d;
         }
 
-        /* Раскрывающаяся панель настроек по шестерёнке */
         .settings-drawer {
             margin-top: 18px;
             padding-top: 18px;
@@ -276,7 +272,6 @@
             margin-top: 4px;
         }
 
-        /* Лента недавних действий */
         .activity-feed {
             max-width: 560px;
             margin: 20px auto 35px auto;
@@ -368,8 +363,7 @@
         <h1>Личный кабинет</h1>
 
         <section class="profile-card" id="profile-card" style="display: none;">
-            <!-- Кнопка-шестерёнка для открытия настроек аккаунта -->
-            <button type="button" class="settings-gear-btn" id="toggle-settings-btn" title="Настройки аккаунта">⚙️</button>
+            <button type="button" class="settings-gear-btn" id="toggle-settings-btn" title="Настройки логина и пароля">⚙️</button>
 
             <div class="profile-header-info">
                 <div class="avatar-upload-container">
@@ -378,7 +372,8 @@
                     <input type="file" id="avatar-input" accept="image/*" style="display: none;">
                 </div>
                 <div class="profile-details">
-                    <h2 id="profile-username">@user</h2>
+                    <h2 id="profile-username">Участник</h2>
+                    <p class="profile-meta" id="profile-handle-meta" style="color: #ff6b81; font-weight: 600;">@user</p>
                     <p class="profile-meta" id="profile-email">Email: ...</p>
                     <p class="profile-meta" id="profile-date">На сайте с: ...</p>
                 </div>
@@ -405,6 +400,12 @@
                 <div class="shop-items-grid" id="shop-items-grid"></div>
             </div>
 
+            <!-- Основное отображаемое имя вынесено на видное место -->
+            <div class="form-group">
+                <label for="edit-display-name">Имя или никнейм (основное на сайте)</label>
+                <input type="text" id="edit-display-name" maxlength="30" placeholder="Например: Skeezy или Алина">
+            </div>
+
             <div class="form-group">
                 <label for="profile-bio">Статус / О себе</label>
                 <textarea id="profile-bio" rows="3" placeholder="Расскажите о себе..."></textarea>
@@ -417,21 +418,13 @@
                     <a id="view-public-link" href="#" style="font-size: 12.5px; color: #ff6b81; text-decoration: none;">👁 Публичный вид →</a>
                 </div>
 
-                <div class="settings-grid-2">
-                    <div class="form-group">
-                        <label for="edit-username">Имя пользователя (логин)</label>
-                        <div class="username-input-wrap">
-                            <span class="username-prefix">@</span>
-                            <input type="text" id="edit-username" minlength="3" maxlength="20" placeholder="username">
-                        </div>
-                        <div class="field-hint">Латиница, цифры или _ (3–20)</div>
+                <div class="form-group">
+                    <label for="edit-username">Системный логин (@username для входа и ссылки)</label>
+                    <div class="username-input-wrap">
+                        <span class="username-prefix">@</span>
+                        <input type="text" id="edit-username" minlength="3" maxlength="20" placeholder="username">
                     </div>
-
-                    <div class="form-group">
-                        <label for="edit-display-name">Отображаемое имя</label>
-                        <input type="text" id="edit-display-name" maxlength="30" placeholder="Например: Максим">
-                        <div class="field-hint">Имя рядом с ником</div>
-                    </div>
+                    <div class="field-hint">Латиница, цифры или _ (3–20 символов)</div>
                 </div>
 
                 <div id="extra-profile-fields" class="settings-grid-2"></div>
@@ -475,7 +468,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=8"></script>
+    <script src="auth.js?v=9"></script>
     <script>
         let currentUsername = getCurrentUsername();
 
@@ -499,6 +492,7 @@
             const avatarBox = document.getElementById('profile-avatar');
             const avatarInput = document.getElementById('avatar-input');
             const usernameEl = document.getElementById('profile-username');
+            const handleMetaEl = document.getElementById('profile-handle-meta');
             const emailEl = document.getElementById('profile-email');
             const dateEl = document.getElementById('profile-date');
             const bioInput = document.getElementById('profile-bio');
@@ -519,14 +513,12 @@
             let currentAvatarBase64 = '';
             let activeShopTab = 'titles';
 
-            // Открытие / закрытие шестерёнки
             toggleSettingsBtn.addEventListener('click', () => {
                 const isClosed = settingsDrawer.style.display === 'none';
                 settingsDrawer.style.display = isClosed ? 'block' : 'none';
                 toggleSettingsBtn.classList.toggle('active', isClosed);
             });
 
-            // Открытие / закрытие мини-магазина
             toggleShopBtn.addEventListener('click', () => {
                 const isClosed = miniShopDrawer.style.display === 'none';
                 miniShopDrawer.style.display = isClosed ? 'block' : 'none';
@@ -561,27 +553,25 @@
                 extraFieldsContainer.appendChild(group);
             });
 
-            function applyAvatarAndFrame(avatarData, username, userData) {
+            function applyAvatarAndFrame(avatarData, mainName, userData) {
                 avatarBox.className = 'profile-avatar ' + getAvatarFrameClass(userData);
                 if (avatarData) {
                     avatarBox.innerHTML = `<img src="${avatarData}" alt="Аватар">`;
                 } else {
-                    avatarBox.textContent = username.charAt(0).toUpperCase();
+                    avatarBox.textContent = mainName.charAt(0).toUpperCase();
                 }
             }
 
             function updateProfileHeaderUI() {
                 if (!loadedUserData) return;
-                const baseName = loadedUserData.displayName
-                    ? `${loadedUserData.displayName} (@${loadedUserData.username})`
-                    : `@${loadedUserData.username}`;
+                const mainName = getPublicDisplayName(loadedUserData);
                 const titleBadge = renderUserTitleBadge(loadedUserData, false);
-                usernameEl.innerHTML = `${baseName}${titleBadge}`;
+                usernameEl.innerHTML = `${mainName}${titleBadge}`;
+                handleMetaEl.textContent = `@${loadedUserData.username}`;
                 pointsBalanceEl.textContent = `${loadedUserData.activityPoints || 0} ⚡`;
-                applyAvatarAndFrame(currentAvatarBase64, loadedUserData.username, loadedUserData);
+                applyAvatarAndFrame(currentAvatarBase64, mainName, loadedUserData);
             }
 
-            // Рендер товаров мини-магазина
             function renderShopItems() {
                 if (!loadedUserData) return;
                 shopItemsGrid.innerHTML = '';
@@ -589,6 +579,7 @@
                 const points = loadedUserData.activityPoints || 0;
                 const ownedTitles = Array.isArray(loadedUserData.ownedTitles) ? loadedUserData.ownedTitles : [];
                 const ownedFrames = Array.isArray(loadedUserData.ownedFrames) ? loadedUserData.ownedFrames : [];
+                const mainName = getPublicDisplayName(loadedUserData);
 
                 const list = activeShopTab === 'titles' ? SHOP_CATALOG.titles : SHOP_CATALOG.frames;
 
@@ -604,7 +595,7 @@
 
                     const previewHtml = isTitle
                         ? `<span style="${item.style} font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 6px;">${item.name}</span>`
-                        : `<div class="frame-demo-circle ${item.cssClass}">${loadedUserData.username.charAt(0).toUpperCase()}</div><strong style="color:#fff; font-size:14px;">${item.name}</strong>`;
+                        : `<div class="frame-demo-circle ${item.cssClass}">${mainName.charAt(0).toUpperCase()}</div><strong style="color:#fff; font-size:14px;">${item.name}</strong>`;
 
                     card.innerHTML = `
                         <div>
@@ -730,7 +721,7 @@
                         ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
 
                         currentAvatarBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                        applyAvatarAndFrame(currentAvatarBase64, currentUsername, loadedUserData);
+                        applyAvatarAndFrame(currentAvatarBase64, getPublicDisplayName(loadedUserData), loadedUserData);
 
                         messageBox.textContent = 'Фото выбрано! Нажмите «Сохранить изменения».';
                         messageBox.className = 'form-message success';
@@ -832,7 +823,6 @@
                 logoutUser();
             });
 
-            // Лента недавних действий
             let recentSupport = [];
             let recentGirls = [];
 
@@ -938,13 +928,14 @@
                     usersListEl.innerHTML = '';
                     snapshot.forEach(doc => {
                         const u = doc.data();
+                        const mainName = getPublicDisplayName(u);
                         const row = document.createElement('div');
                         row.className = 'activity-item';
                         row.style.alignItems = 'center';
                         row.innerHTML = `
                             <div class="activity-badge">👤</div>
                             <div class="activity-body">
-                                <div class="activity-title"><span>@${u.username}</span>${renderUserTitleBadge(u, true)}</div>
+                                <div class="activity-title"><span>${mainName}</span> <small style="color: rgba(255,255,255,0.5);">(@${u.username})</small>${renderUserTitleBadge(u, true)}</div>
                                 <p class="activity-preview">${u.email || ''} • ⚡ ${u.activityPoints || 0} очк.</p>
                             </div>
                         `;
@@ -955,7 +946,7 @@
                             banBtn.style.cssText = 'padding: 6px 12px; font-size: 12px;';
                             banBtn.textContent = 'Удалить';
                             banBtn.onclick = async () => {
-                                if (confirm(`Удалить аккаунт @${u.username}?`)) {
+                                if (confirm(`Удалить аккаунт ${mainName} (@${u.username})?`)) {
                                     await db.collection('users').doc(doc.id).delete();
                                 }
                             };
