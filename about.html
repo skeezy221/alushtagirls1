@@ -4,7 +4,444 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Girls From Alushta — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4">
+    <style>
+        /* Гарантированные стили витрины анкет */
+        .subtitle-muted {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 15px;
+            max-width: 440px;
+            margin: 0 auto 22px auto;
+        }
+
+        .dating-top-actions {
+            margin: 0 auto 22px auto;
+            text-align: center;
+        }
+
+        .btn-pill {
+            border-radius: 999px !important;
+            padding: 12px 26px !important;
+            font-size: 15px !important;
+            background: linear-gradient(135deg, #dc143c, #ff2e55) !important;
+            color: #fff !important;
+            border: none !important;
+            box-shadow: 0 4px 18px rgba(220, 20, 60, 0.5) !important;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(220, 20, 60, 0.8) !important;
+        }
+
+        .compact-notice {
+            max-width: 410px;
+            margin: 0 auto 24px auto;
+            padding: 16px 20px;
+            border-radius: 16px;
+            background: rgba(12, 12, 18, 0.88);
+            border: 1px solid rgba(220, 20, 60, 0.45);
+        }
+
+        /* Форма новой анкеты */
+        .dating-form {
+            max-width: 410px;
+            margin: 0 auto 28px auto;
+            padding: 22px;
+            background: rgba(12, 12, 18, 0.94);
+            border: 1px solid rgba(220, 20, 60, 0.55);
+            border-radius: 20px;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.85);
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        .dating-form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .dating-form-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .btn-close-form {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ddd;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-close-form:hover {
+            background: #dc143c;
+            color: #fff;
+        }
+
+        .form-hint {
+            font-size: 12.5px;
+            color: #aaa;
+            margin: 0 0 16px 0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-row .age-group {
+            max-width: 95px;
+        }
+
+        .photo-upload-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .photo-select-btn {
+            cursor: pointer;
+            display: inline-block;
+            padding: 8px 14px;
+            font-size: 13.5px;
+            border-radius: 10px;
+        }
+
+        .photo-file-name {
+            font-size: 12.5px;
+            color: #999;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .photo-preview-wrap {
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .photo-preview-wrap img {
+            width: 140px;
+            height: 175px;
+            border-radius: 14px;
+            border: 2px solid #dc143c;
+            object-fit: cover;
+        }
+
+        /* --- Сцена свайп-карточек --- */
+        .swipe-stage {
+            max-width: 400px;
+            margin: 0 auto 35px auto;
+            user-select: none;
+        }
+
+        .swipe-deck {
+            position: relative;
+            width: 100%;
+            min-height: 530px;
+            margin: 0 auto;
+        }
+
+        .swipe-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(14, 14, 20, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(220, 20, 60, 0.45);
+            border-radius: 24px;
+            padding: 14px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85), 0 0 24px rgba(220, 20, 60, 0.2);
+            touch-action: pan-y;
+            will-change: transform;
+        }
+
+        .swipe-card.is-top {
+            z-index: 2;
+            cursor: grab;
+        }
+
+        .swipe-card.is-top:active {
+            cursor: grabbing;
+        }
+
+        .swipe-card.is-next {
+            z-index: 1;
+            transform: scale(0.95) translateY(14px);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        /* Штампы при свайпе */
+        .swipe-stamp {
+            position: absolute;
+            top: 30px;
+            z-index: 10;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            opacity: 0;
+            pointer-events: none;
+            text-transform: uppercase;
+            background: rgba(0, 0, 0, 0.65);
+        }
+
+        .stamp-like {
+            left: 26px;
+            color: #2ee59d;
+            border: 3px solid #2ee59d;
+            transform: rotate(-12deg);
+        }
+
+        .stamp-pass {
+            right: 26px;
+            color: #ff4d6d;
+            border: 3px solid #ff4d6d;
+            transform: rotate(12deg);
+        }
+
+        /* 1. Отдельная рамочка для фотографии */
+        .photo-frame {
+            position: relative;
+            width: 100%;
+            height: 330px;
+            border-radius: 16px;
+            border: 2px solid rgba(220, 20, 60, 0.65);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.7), 0 4px 16px rgba(220, 20, 60, 0.25);
+            overflow: hidden;
+            background: #09090d;
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+
+        .photo-frame-badges {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .likes-pill {
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .likes-pill.active {
+            border-color: #dc143c;
+            color: #ff6b81;
+        }
+
+        .card-del-icon {
+            background: rgba(0, 0, 0, 0.72);
+            border: 1px solid rgba(255, 77, 109, 0.55);
+            color: #ff6b81;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-del-icon:hover {
+            background: #dc143c;
+            color: #fff;
+        }
+
+        /* 2. Отдельное облачко для имени и возраста */
+        .info-bubble {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(220, 20, 60, 0.35);
+            border-radius: 14px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+
+        .info-bubble h2 {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(220, 20, 60, 0.6);
+        }
+
+        .info-bubble h2 span {
+            font-weight: 400;
+            color: #ff758f;
+        }
+
+        .info-bubble-date {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        /* 3. Отдельное облачко для описания */
+        .bio-bubble {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 12px 16px;
+            text-align: left;
+            min-height: 54px;
+            max-height: 110px;
+            overflow-y: auto;
+        }
+
+        .bio-bubble p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.48;
+            color: rgba(255, 255, 255, 0.9);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* 4. Отдельные подписанные кнопки Skip и Like */
+        .swipe-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .action-pill-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .action-pill-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-rewind {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 18px;
+            background: rgba(16, 16, 22, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #f5b041;
+            cursor: pointer;
+        }
+
+        .btn-rewind:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .btn-skip {
+            flex: 1;
+            max-width: 145px;
+            background: rgba(16, 16, 22, 0.92);
+            border: 2px solid rgba(255, 77, 109, 0.65);
+            color: #ff4d6d;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+        }
+
+        .btn-skip:hover {
+            background: rgba(255, 77, 109, 0.18);
+            transform: translateY(-2px);
+            box-shadow: 0 0 18px rgba(255, 77, 109, 0.45);
+        }
+
+        .btn-like-action {
+            flex: 1;
+            max-width: 145px;
+            background: linear-gradient(135deg, #dc143c, #ff2e55);
+            border: 2px solid transparent;
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(220, 20, 60, 0.55);
+        }
+
+        .btn-like-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 24px rgba(220, 20, 60, 0.85);
+        }
+
+        .swipe-counter {
+            margin-top: 12px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .swipe-empty-state {
+            min-height: 420px;
+            background: rgba(14, 14, 20, 0.9);
+            border: 1px solid rgba(220, 20, 60, 0.4);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            color: #ddd;
+            box-sizing: border-box;
+        }
+
+        .empty-heart {
+            font-size: 42px;
+            color: #dc143c;
+            text-shadow: 0 0 18px #dc143c;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
 
@@ -14,29 +451,29 @@
 
     <main>
         <h1>Girls From Alushta</h1>
-        <p class="subtitle-muted">Свайпай вправо, чтобы выразить симпатию, или влево, чтобы смотреть дальше.</p>
+        <p class="subtitle-muted">Свайпай вправо или жми Like, чтобы выразить симпатию, или Skip, чтобы смотреть дальше.</p>
 
-        <!-- Панель для авторизованных пользователей -->
+        <!-- Кнопка для авторизованных -->
         <div class="dating-top-actions" id="auth-dating-actions" style="display: none;">
-            <button type="button" class="btn-submit btn-pill" id="toggle-form-btn">+ Разместить анкету</button>
+            <button type="button" class="btn-pill" id="toggle-form-btn">+ Разместить анкету</button>
         </div>
 
-        <!-- Компактная плашка для гостей -->
-        <div class="guest-notice compact-notice" id="dating-guest-notice" style="display: none;">
-            <p>Для размещения анкеты и сохранения симпатий войдите в аккаунт.</p>
+        <!-- Плашка для гостей -->
+        <div class="compact-notice" id="dating-guest-notice" style="display: none;">
+            <p style="margin: 0 0 12px 0; font-size: 14px;">Для размещения анкеты и сохранения лайков войдите в аккаунт.</p>
             <div class="guest-notice-actions">
-                <a href="login.html" class="btn-submit btn-sm">Войти</a>
-                <a href="registr.html" class="btn-outline btn-sm">Регистрация</a>
+                <a href="login.html" class="btn-submit">Войти</a>
+                <a href="registr.html" class="btn-outline">Регистрация</a>
             </div>
         </div>
 
-        <!-- Аккуратная форма создания анкеты -->
+        <!-- Форма создания анкеты -->
         <form class="dating-form" id="dating-form" style="display: none;">
             <div class="dating-form-header">
                 <h2>Новая анкета</h2>
                 <button type="button" class="btn-close-form" id="cancel-form-btn" title="Закрыть">✕</button>
             </div>
-            <p class="form-hint">Анкета независима от профиля — укажите любое имя и отдельное фото.</p>
+            <p class="form-hint">Данные анкеты не привязаны к профилю — укажите любое имя и отдельное фото.</p>
 
             <div class="form-row">
                 <div class="form-group">
@@ -69,20 +506,20 @@
 
             <div id="dating-message" class="form-message"></div>
 
-            <button type="submit" class="btn-submit btn-full" id="submit-card-btn">Опубликовать анкету</button>
+            <button type="submit" class="btn-pill" style="width: 100%; margin-top: 8px;" id="submit-card-btn">Опубликовать анкету</button>
         </form>
 
-        <!-- Свайп-колода анкет -->
+        <!-- Колода карточек -->
         <section class="swipe-stage" id="swipe-stage">
             <div class="swipe-deck" id="swipe-deck">
                 <div class="swipe-empty-state">Загрузка анкет...</div>
             </div>
 
-            <!-- Нижние кнопки управления свайпом -->
+            <!-- Подписанные кнопки Skip и Like -->
             <div class="swipe-controls" id="swipe-controls" style="display: none;">
-                <button type="button" class="swipe-btn btn-rewind" id="btn-rewind" title="Вернуть предыдущую">↺</button>
-                <button type="button" class="swipe-btn btn-pass" id="btn-pass" title="Пропустить (влево)">✕</button>
-                <button type="button" class="swipe-btn btn-like-swipe" id="btn-like-swipe" title="Симпатия (вправо)">♥</button>
+                <button type="button" class="btn-rewind" id="btn-rewind" title="Вернуть предыдущую">↺</button>
+                <button type="button" class="action-pill-btn btn-skip" id="btn-pass">✕ Skip</button>
+                <button type="button" class="action-pill-btn btn-like-action" id="btn-like-swipe">♥ Like</button>
             </div>
             <div class="swipe-counter" id="swipe-counter"></div>
         </section>
@@ -90,7 +527,7 @@
         <nav>
             <a href="index.html">Главная</a>
             <a href="about.html">Girls From Alushta</a>
-            <a href="contacts.html">Сугубое мнение</a>
+            <a href="contacts.html">Поддержка</a>
             <a href="baze.html">FAQ</a>
             <a href="registr.html">Регистрация</a>
         </nav>
@@ -147,7 +584,6 @@
             datingMessage.textContent = '';
         });
 
-        // Сжатие фото перед загрузкой
         photoInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -189,7 +625,6 @@
             reader.readAsDataURL(file);
         });
 
-        // Публикация новой анкеты
         datingForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             if (!currentUsername) return;
@@ -239,7 +674,6 @@
             }
         });
 
-        // Запись лайка в Firebase при свайпе вправо
         async function registerLike(cardData) {
             if (!currentUsername) return;
             const likedBy = Array.isArray(cardData.likedBy) ? cardData.likedBy : [];
@@ -254,31 +688,33 @@
             }
         }
 
-        // Создание DOM-элемента одной свайп-карточки
         function createSwipeCardElement(cardData, isTopCard) {
             const likedBy = Array.isArray(cardData.likedBy) ? cardData.likedBy : [];
             const isLiked = currentUsername && likedBy.includes(currentUsername);
-            const isOwner = currentUsername && cardData.ownerAccount === currentUsername.toLowerCase();
+            const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
+            const isOwner = hasAdminAccess || (currentUsername && cardData.ownerAccount === currentUsername.toLowerCase());
 
             const card = document.createElement('article');
             card.className = 'swipe-card' + (isTopCard ? ' is-top' : ' is-next');
 
             card.innerHTML = `
-                <div class="swipe-stamp stamp-like">СИМПАТИЯ ♥</div>
-                <div class="swipe-stamp stamp-pass">ДАЛЬШЕ ✕</div>
-                <div class="swipe-card-media">
+                <div class="swipe-stamp stamp-like">LIKE ♥</div>
+                <div class="swipe-stamp stamp-pass">SKIP ✕</div>
+
+                <div class="photo-frame">
                     <img src="${cardData.photo}" alt="${cardData.name}" draggable="false">
-                    <div class="swipe-card-gradient"></div>
-                    <div class="swipe-card-badges">
+                    <div class="photo-frame-badges">
                         <span class="likes-pill ${isLiked ? 'active' : ''}">♥ ${likedBy.length}</span>
-                        ${isOwner ? '<button type="button" class="card-del-icon" title="Удалить свою анкету">🗑</button>' : ''}
-                    </div>
-                    <div class="swipe-card-headline">
-                        <h2>${cardData.name}, <span>${cardData.age}</span></h2>
-                        <span class="swipe-card-date">${cardData.date || ''}</span>
+                        ${isOwner ? '<button type="button" class="card-del-icon" title="Удалить анкету">🗑</button>' : ''}
                     </div>
                 </div>
-                <div class="swipe-card-body">
+
+                <div class="info-bubble">
+                    <h2>${cardData.name}, <span>${cardData.age}</span></h2>
+                    <span class="info-bubble-date">${cardData.date || ''}</span>
+                </div>
+
+                <div class="bio-bubble">
                     <p>${cardData.bio}</p>
                 </div>
             `;
@@ -301,7 +737,6 @@
             return card;
         }
 
-        // Логика перетаскивания мышью и пальцем (Pointer Events)
         function attachSwipeGestures(card, cardData) {
             let startX = 0;
             let startY = 0;
@@ -324,11 +759,11 @@
                 if (!isDragging) return;
                 currentX = e.clientX - startX;
                 const currentY = (e.clientY - startY) * 0.25;
-                const rotate = currentX * 0.06;
+                const rotate = currentX * 0.05;
 
                 card.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotate}deg)`;
 
-                const opacity = Math.min(Math.abs(currentX) / 100, 1);
+                const opacity = Math.min(Math.abs(currentX) / 95, 1);
                 if (currentX > 15) {
                     stampLike.style.opacity = opacity;
                     stampPass.style.opacity = 0;
@@ -348,7 +783,7 @@
                     card.releasePointerCapture(e.pointerId);
                 }
 
-                const threshold = 95;
+                const threshold = 90;
                 if (currentX > threshold) {
                     completeSwipe('right', card, cardData);
                 } else if (currentX < -threshold) {
@@ -366,7 +801,6 @@
             card.addEventListener('pointercancel', endDrag);
         }
 
-        // Завершение свайпа (анимация вылета карточки)
         function completeSwipe(direction, cardElement, cardData) {
             if (isAnimating) return;
             isAnimating = true;
@@ -382,10 +816,10 @@
             }
 
             const flyX = direction === 'right' ? window.innerWidth * 0.85 : -window.innerWidth * 0.85;
-            const flyRotate = direction === 'right' ? 24 : -24;
+            const flyRotate = direction === 'right' ? 22 : -22;
 
             cardElement.style.transition = 'transform 0.38s ease-out, opacity 0.35s ease-out';
-            cardElement.style.transform = `translate3d(${flyX}px, 40px, 0) rotate(${flyRotate}deg)`;
+            cardElement.style.transform = `translate3d(${flyX}px, 35px, 0) rotate(${flyRotate}deg)`;
             cardElement.style.opacity = '0';
 
             const nextCard = swipeDeck.querySelector('.is-next');
@@ -398,89 +832,3 @@
             setTimeout(() => {
                 currentIndex++;
                 isAnimating = false;
-                renderDeck();
-            }, 340);
-        }
-
-        // Отрисовка колоды
-        function renderDeck() {
-            swipeDeck.innerHTML = '';
-
-            if (allProfiles.length === 0) {
-                swipeDeck.innerHTML = '<div class="swipe-empty-state">Пока нет ни одной анкеты.<br>Станьте первой!</div>';
-                swipeControls.style.display = 'none';
-                swipeCounter.textContent = '';
-                return;
-            }
-
-            if (currentIndex >= allProfiles.length) {
-                swipeDeck.innerHTML = `
-                    <div class="swipe-empty-state">
-                        <div class="empty-heart">♥</div>
-                        <h3>Вы посмотрели все анкеты</h3>
-                        <p>Загляните чуть позже или начните просмотр заново.</p>
-                        <button type="button" class="btn-submit btn-pill" id="restart-deck-btn">Смотреть заново</button>
-                    </div>
-                `;
-                swipeControls.style.display = 'none';
-                swipeCounter.textContent = '';
-
-                document.getElementById('restart-deck-btn').addEventListener('click', () => {
-                    currentIndex = 0;
-                    renderDeck();
-                });
-                return;
-            }
-
-            swipeControls.style.display = 'flex';
-            btnRewind.disabled = currentIndex === 0;
-            swipeCounter.textContent = `Анкета ${currentIndex + 1} из ${allProfiles.length}`;
-
-            // Если есть следующая карточка — кладем её под низ для глубины
-            if (currentIndex + 1 < allProfiles.length) {
-                const nextEl = createSwipeCardElement(allProfiles[currentIndex + 1], false);
-                swipeDeck.appendChild(nextEl);
-            }
-
-            // Текущая верхняя карточка
-            const topEl = createSwipeCardElement(allProfiles[currentIndex], true);
-            swipeDeck.appendChild(topEl);
-        }
-
-        // Кнопки управления под карточкой
-        btnPass.addEventListener('click', () => {
-            const topCard = swipeDeck.querySelector('.is-top');
-            if (topCard && allProfiles[currentIndex]) {
-                completeSwipe('left', topCard, allProfiles[currentIndex]);
-            }
-        });
-
-        btnLikeSwipe.addEventListener('click', () => {
-            const topCard = swipeDeck.querySelector('.is-top');
-            if (topCard && allProfiles[currentIndex]) {
-                completeSwipe('right', topCard, allProfiles[currentIndex]);
-            }
-        });
-
-        btnRewind.addEventListener('click', () => {
-            if (currentIndex > 0 && !isAnimating) {
-                currentIndex--;
-                renderDeck();
-            }
-        });
-
-        // Подписка на базу Firebase в реальном времени
-        db.collection('girls_profiles').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            allProfiles = [];
-            snapshot.forEach(doc => {
-                allProfiles.push({ id: doc.id, ...doc.data() });
-            });
-            if (currentIndex >= allProfiles.length && allProfiles.length > 0) {
-                currentIndex = 0;
-            }
-            renderDeck();
-        });
-    </script>
-
-</body>
-</html>
