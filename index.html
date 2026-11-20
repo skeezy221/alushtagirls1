@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=6">
     <style>
         /* Две главные кнопки действий */
         .hero-action-buttons {
@@ -315,8 +315,9 @@
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js"></script>
+    <script src="auth.js?v=6"></script>
     <script>
         const toggleSearchBtn = document.getElementById('toggle-search-btn');
         const closeSearchPanelBtn = document.getElementById('close-search-panel');
@@ -402,9 +403,10 @@
 
                 const nameEl = document.createElement('div');
                 nameEl.className = 'found-user-name';
-                const isTargetAdmin = typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase());
+                const isTargetAdmin = (typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase())) ||
+                                      (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
                 nameEl.innerHTML = `<span>@</span>${user.username}` + (isTargetAdmin
-                    ? ' <span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 5px; margin-left: 4px;">ADMIN</span>'
+                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 8px rgba(220, 20, 60, 0.7); font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 5px; margin-left: 4px;">ADMIN</span>'
                     : '');
 
                 const dateEl = document.createElement('span');
