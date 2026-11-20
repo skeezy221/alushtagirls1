@@ -3,8 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сугубое мнение — Girls from Alushta</title>
+    <title>Поддержка — Знакомства Алушта Girls</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .support-wrapper {
+            max-width: 520px;
+            margin: 25px auto 35px auto;
+        }
+
+        /* Переключатель вкладок */
+        .support-tabs {
+            display: flex;
+            gap: 10px;
+            background: rgba(12, 12, 18, 0.85);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(220, 20, 60, 0.4);
+            margin-bottom: 22px;
+        }
+
+        .support-tab-btn {
+            flex: 1;
+            padding: 11px 14px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .support-tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .support-tab-btn.active {
+            background: linear-gradient(135deg, #dc143c, #ff2e55);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(220, 20, 60, 0.5);
+        }
+
+        /* Карточка формы поддержки */
+        .support-card {
+            background: rgba(12, 12, 18, 0.9);
+            border: 1px solid rgba(220, 20, 60, 0.45);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(220, 20, 60, 0.18);
+            text-align: left;
+        }
+
+        .support-card h2 {
+            margin: 0 0 6px 0;
+            font-size: 20px;
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(220, 20, 60, 0.6);
+        }
+
+        .support-desc {
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.72);
+            margin: 0 0 18px 0;
+        }
+
+        .support-card select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(220, 20, 60, 0.5);
+            background-color: rgba(15, 15, 22, 0.95);
+            color: #ffffff;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .support-card select:focus {
+            border-color: #ff2e55;
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.4);
+        }
+
+        /* Список отправленных обращений пользователя */
+        .my-tickets-section {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .my-tickets-section h3 {
+            font-size: 17px;
+            color: #ffffff;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .ticket-item {
+            background: rgba(12, 12, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .ticket-type-badge {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+        .badge-report {
+            background: rgba(220, 20, 60, 0.22);
+            color: #ff6b81;
+            border: 1px solid rgba(220, 20, 60, 0.5);
+        }
+
+        .badge-question {
+            background: rgba(46, 229, 157, 0.15);
+            color: #2ee59d;
+            border: 1px solid rgba(46, 229, 157, 0.4);
+        }
+
+        .ticket-status {
+            font-size: 12px;
+            color: #f5b041;
+        }
+
+        .ticket-target {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .ticket-text {
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.82);
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
 </head>
 <body>
 
@@ -13,39 +161,85 @@
     </header>
 
     <main>
-        <h1>Сугубое мнение</h1>
-        <p>Субъективные заметки, истории и честный взгляд со стороны.</p>
+        <h1>Поддержка</h1>
+        <p>Связь с администрацией «Знакомства Алушта Girls» и модерация анкет.</p>
 
-        <div class="guest-notice" id="guest-notice" style="display: none;">
-            <p>Публиковать мнения и ставить реакции могут только зарегистрированные участники.</p>
-            <div class="guest-notice-actions">
-                <a href="login.html" class="btn-submit">Войти в аккаунт</a>
-                <a href="registr.html" class="btn-outline">Регистрация</a>
+        <div class="support-wrapper">
+            <!-- Вкладки переключения -->
+            <div class="support-tabs">
+                <button type="button" class="support-tab-btn active" id="tab-report-btn">🚨 Подать жалобу на пользователя</button>
+                <button type="button" class="support-tab-btn" id="tab-question-btn">💬 Задать вопрос администрации</button>
+            </div>
+
+            <!-- Вкладка 1: Жалоба на пользователя -->
+            <form class="support-card" id="report-form">
+                <h2>Жалоба на пользователя</h2>
+                <p class="support-desc">Если анкета нарушает правила, использует чужие фото или ведёт себя некорректно — сообщите нам.</p>
+
+                <div class="form-group">
+                    <label for="report-target">Имя в анкете или @логин нарушителя *</label>
+                    <input type="text" id="report-target" placeholder="Например: Алина, 20 или @username" maxlength="60" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="report-reason">Причина жалобы *</label>
+                    <select id="report-reason" required>
+                        <option value="Фейковая анкета / чужие фото">Фейковая анкета / чужие фото</option>
+                        <option value="Оскорбления или спам">Оскорбления или спам</option>
+                        <option value="Неприемлемый контент">Неприемлемый контент</option>
+                        <option value="Мошенничество / реклама">Мошенничество / реклама</option>
+                        <option value="Другое">Другое</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="report-details">Подробности *</label>
+                    <textarea id="report-details" rows="4" placeholder="Опишите ситуацию, чтобы модератор быстрее принял меры..." maxlength="600" required></textarea>
+                </div>
+
+                <div id="report-message" class="form-message"></div>
+
+                <button type="submit" class="btn-submit" style="width: 100%;" id="report-submit-btn">Отправить жалобу</button>
+            </form>
+
+            <!-- Вкладка 2: Вопрос администрации -->
+            <form class="support-card" id="question-form" style="display: none;">
+                <h2>Вопрос администрации</h2>
+                <p class="support-desc">Есть предложения по улучшению сайта, вопросы по работе анкет или аккаунта? Напишите нам.</p>
+
+                <div class="form-group">
+                    <label for="question-topic">Тема вопроса *</label>
+                    <input type="text" id="question-topic" placeholder="Например: Проблема с загрузкой фото или идея для сайта" maxlength="80" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="question-contact">Ваш контакт для ответа (Telegram / Email)</label>
+                    <input type="text" id="question-contact" placeholder="@telegram или почта (необязательно)" maxlength="60">
+                </div>
+
+                <div class="form-group">
+                    <label for="question-text">Ваш вопрос *</label>
+                    <textarea id="question-text" rows="4" placeholder="Подробно опишите ваш вопрос..." maxlength="600" required></textarea>
+                </div>
+
+                <div id="question-message" class="form-message"></div>
+
+                <button type="submit" class="btn-submit" style="width: 100%;" id="question-submit-btn">Отправить вопрос</button>
+            </form>
+
+            <!-- История обращений текущего авторизованного пользователя -->
+            <div class="my-tickets-section" id="my-tickets-section" style="display: none;">
+                <h3>Ваши отправленные обращения</h3>
+                <div id="my-tickets-list"></div>
             </div>
         </div>
 
-        <form class="opinion-form" id="opinion-form" style="display: none;">
-            <div class="form-group">
-                <label>Публикация от имени: <span id="current-author-badge" class="author-badge"></span></label>
-            </div>
-
-            <div class="form-group">
-                <label for="opinion-text">Ваше мнение</label>
-                <textarea id="opinion-text" rows="4" placeholder="Напишите всё, что думаете..." required></textarea>
-            </div>
-
-            <button type="submit" class="btn-submit" id="publish-btn">Опубликовать мнение</button>
-        </form>
-
-        <section class="opinions-feed" id="opinions-feed">
-            <p class="empty-posts">Загрузка мнений...</p>
-        </section>
-
         <nav>
-            <a href="index.html">На главную</a>
-            <a href="about.html" target="_blank">Girls From Alushta</a>
-            <a href="baze.html" target="_blank">FAQ</a>
-            <a href="registr.html" target="_blank">Регистрация</a>
+            <a href="index.html">Главная</a>
+            <a href="about.html">Girls From Alushta</a>
+            <a href="contacts.html">Поддержка</a>
+            <a href="baze.html">FAQ</a>
+            <a href="registr.html">Регистрация</a>
         </nav>
     </main>
 
@@ -54,138 +248,159 @@
     <script src="auth.js"></script>
     <script>
         const currentUsername = getCurrentUsername();
-        const guestNotice = document.getElementById('guest-notice');
-        const opinionForm = document.getElementById('opinion-form');
-        const textInput = document.getElementById('opinion-text');
-        const publishBtn = document.getElementById('publish-btn');
-        const feed = document.getElementById('opinions-feed');
 
-        if (currentUsername) {
-            opinionForm.style.display = 'block';
-            document.getElementById('current-author-badge').textContent = '@' + currentUsername;
-        } else {
-            guestNotice.style.display = 'block';
-        }
+        const tabReportBtn = document.getElementById('tab-report-btn');
+        const tabQuestionBtn = document.getElementById('tab-question-btn');
+        const reportForm = document.getElementById('report-form');
+        const questionForm = document.getElementById('question-form');
 
-        db.collection('opinions').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            feed.innerHTML = '';
+        const reportMessage = document.getElementById('report-message');
+        const questionMessage = document.getElementById('question-message');
+        const reportSubmitBtn = document.getElementById('report-submit-btn');
+        const questionSubmitBtn = document.getElementById('question-submit-btn');
 
-            if (snapshot.empty) {
-                feed.innerHTML = '<p class="empty-posts">Пока никто не оставил мнение. Станьте первым!</p>';
-                return;
-            }
+        const myTicketsSection = document.getElementById('my-tickets-section');
+        const myTicketsList = document.getElementById('my-tickets-list');
 
-            snapshot.forEach(doc => {
-                const post = doc.data();
-                const postId = doc.id;
-                const likedBy = Array.isArray(post.likedBy) ? post.likedBy : [];
-
-                const article = document.createElement('article');
-                article.className = 'opinion-card';
-
-                const header = document.createElement('div');
-                header.className = 'opinion-header';
-
-                const authorLink = document.createElement('a');
-                authorLink.className = 'opinion-author';
-                authorLink.href = 'profile.html?user=' + encodeURIComponent(post.author);
-                authorLink.textContent = '@' + post.author;
-
-                const rightControls = document.createElement('div');
-                rightControls.className = 'opinion-controls';
-
-                const dateSpan = document.createElement('span');
-                dateSpan.className = 'opinion-date';
-                dateSpan.textContent = post.date;
-                rightControls.appendChild(dateSpan);
-
-                if (currentUsername && currentUsername.toLowerCase() === post.author.toLowerCase()) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.type = 'button';
-                    deleteBtn.className = 'btn-delete-post';
-                    deleteBtn.textContent = 'Удалить';
-                    deleteBtn.onclick = async function() {
-                        await db.collection('opinions').doc(postId).delete();
-                    };
-                    rightControls.appendChild(deleteBtn);
-                }
-
-                const bodyP = document.createElement('p');
-                bodyP.className = 'opinion-body';
-                bodyP.textContent = post.text;
-
-                const footer = document.createElement('div');
-                footer.className = 'opinion-footer';
-
-                const likeBtn = document.createElement('button');
-                likeBtn.type = 'button';
-                likeBtn.className = 'btn-like';
-
-                const isLiked = currentUsername && likedBy.includes(currentUsername);
-                if (isLiked) {
-                    likeBtn.classList.add('liked');
-                }
-
-                likeBtn.innerHTML = `<span class="heart-icon">♥</span> <span class="like-count">${likedBy.length}</span>`;
-                likeBtn.onclick = async function() {
-                    if (!currentUsername) {
-                        alert('Войдите в аккаунт, чтобы оценивать публикации!');
-                        return;
-                    }
-                    const postRef = db.collection('opinions').doc(postId);
-                    if (isLiked) {
-                        await postRef.update({
-                            likedBy: firebase.firestore.FieldValue.arrayRemove(currentUsername)
-                        });
-                    } else {
-                        await postRef.update({
-                            likedBy: firebase.firestore.FieldValue.arrayUnion(currentUsername)
-                        });
-                    }
-                };
-
-                footer.appendChild(likeBtn);
-                header.appendChild(authorLink);
-                header.appendChild(rightControls);
-                article.appendChild(header);
-                article.appendChild(bodyP);
-                article.appendChild(footer);
-                feed.appendChild(article);
-            });
+        // Переключение вкладок
+        tabReportBtn.addEventListener('click', () => {
+            tabReportBtn.classList.add('active');
+            tabQuestionBtn.classList.remove('active');
+            reportForm.style.display = 'block';
+            questionForm.style.display = 'none';
+            reportMessage.textContent = '';
         });
 
-        opinionForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            if (!currentUsername) return;
+        tabQuestionBtn.addEventListener('click', () => {
+            tabQuestionBtn.classList.add('active');
+            tabReportBtn.classList.remove('active');
+            questionForm.style.display = 'block';
+            reportForm.style.display = 'none';
+            questionMessage.textContent = '';
+        });
 
-            const text = textInput.value.trim();
-            if (!text) return;
+        // Отправка жалобы на пользователя
+        reportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-            publishBtn.disabled = true;
-            publishBtn.textContent = 'Публикация...';
+            const target = document.getElementById('report-target').value.trim();
+            const reason = document.getElementById('report-reason').value;
+            const details = document.getElementById('report-details').value.trim();
+
+            reportSubmitBtn.disabled = true;
+            reportSubmitBtn.textContent = 'Отправка жалобы...';
 
             try {
                 const now = new Date();
-                const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+                const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' ' +
+                                now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-                await db.collection('opinions').add({
-                    author: currentUsername,
-                    authorLower: currentUsername.toLowerCase(),
-                    text: text,
+                await db.collection('support_tickets').add({
+                    type: 'report',
+                    sender: currentUsername || 'Гость',
+                    target: target,
+                    reason: reason,
+                    text: details,
+                    status: 'На рассмотрении',
                     date: dateStr,
-                    likedBy: [],
                     createdAt: Date.now()
                 });
 
-                textInput.value = '';
+                reportForm.reset();
+                reportMessage.textContent = 'Жалоба успешно отправлена администрации! Мы проверим анкету в ближайшее время.';
+                reportMessage.className = 'form-message success';
             } catch (err) {
                 console.error(err);
-                alert('Не удалось опубликовать мнение. Проверьте подключение.');
+                reportMessage.textContent = 'Ошибка при отправке. Проверьте соединение с интернетом.';
+                reportMessage.className = 'form-message error';
             } finally {
-                publishBtn.disabled = false;
-                publishBtn.textContent = 'Опубликовать мнение';
+                reportSubmitBtn.disabled = false;
+                reportSubmitBtn.textContent = 'Отправить жалобу';
             }
         });
+
+        // Отправка вопроса администрации
+        questionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const topic = document.getElementById('question-topic').value.trim();
+            const contact = document.getElementById('question-contact').value.trim();
+            const text = document.getElementById('question-text').value.trim();
+
+            questionSubmitBtn.disabled = true;
+            questionSubmitBtn.textContent = 'Отправка вопроса...';
+
+            try {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' ' +
+                                now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+                await db.collection('support_tickets').add({
+                    type: 'question',
+                    sender: currentUsername || 'Гость',
+                    topic: topic,
+                    contact: contact,
+                    text: text,
+                    status: 'Передано администрации',
+                    date: dateStr,
+                    createdAt: Date.now()
+                });
+
+                questionForm.reset();
+                questionMessage.textContent = 'Ваш вопрос отправлен администрации!';
+                questionMessage.className = 'form-message success';
+            } catch (err) {
+                console.error(err);
+                questionMessage.textContent = 'Ошибка при отправке. Попробуйте позже.';
+                questionMessage.className = 'form-message error';
+            } finally {
+                questionSubmitBtn.disabled = false;
+                questionSubmitBtn.textContent = 'Отправить вопрос';
+            }
+        });
+
+        // Если пользователь вошёл в аккаунт — показываем его отправленные жалобы и вопросы
+        if (currentUsername) {
+            db.collection('support_tickets')
+                .where('sender', '==', currentUsername)
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        myTicketsSection.style.display = 'none';
+                        return;
+                    }
+
+                    const tickets = [];
+                    snapshot.forEach(doc => tickets.push(doc.data()));
+                    tickets.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                    myTicketsSection.style.display = 'block';
+                    myTicketsList.innerHTML = '';
+
+                    tickets.forEach(item => {
+                        const isReport = item.type === 'report';
+                        const card = document.createElement('div');
+                        card.className = 'ticket-item';
+
+                        const titleLine = isReport
+                            ? `Жалоба на: ${item.target} (${item.reason})`
+                            : `Вопрос: ${item.topic}`;
+
+                        card.innerHTML = `
+                            <div class="ticket-header">
+                                <span class="ticket-type-badge ${isReport ? 'badge-report' : 'badge-question'}">
+                                    ${isReport ? '🚨 Жалоба' : '💬 Вопрос'}
+                                </span>
+                                <span class="ticket-status">${item.status || 'Отправлено'} • ${item.date || ''}</span>
+                            </div>
+                            <div class="ticket-target"></div>
+                            <p class="ticket-text"></p>
+                        `;
+                        card.querySelector('.ticket-target').textContent = titleLine;
+                        card.querySelector('.ticket-text').textContent = item.text;
+                        myTicketsList.appendChild(card);
+                    });
+                });
+        }
     </script>
 
 </body>
