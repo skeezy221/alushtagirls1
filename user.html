@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль участника — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=12">
     <style>
         .public-profile-card {
             max-width: 480px;
@@ -187,7 +187,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=10"></script>
+    <script src="auth.js?v=12"></script>
     <script>
         const profileBox = document.getElementById('public-profile-box');
         const params = new URLSearchParams(window.location.search);
@@ -197,6 +197,22 @@
         let lastFeedbackText = '';
 
         function loadPublicProfile() {
+            // Блокируем прямой доступ к профилям для незарегистрированных гостей
+            if (!currentUsername) {
+                profileBox.innerHTML = `
+                    <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+                    <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #fff;">Доступ только для участников</h2>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.5; margin: 0 0 20px 0;">
+                        Чтобы просматривать профили участников и ставить лайки, войдите в свой аккаунт или зарегистрируйтесь.
+                    </p>
+                    <div class="public-actions">
+                        <a href="login.html" class="btn-submit">Войти</a>
+                        <a href="registr.html" class="btn-outline">Регистрация</a>
+                    </div>
+                `;
+                return;
+            }
+
             if (!targetUsername) {
                 profileBox.innerHTML = `
                     <p style="color: #ff6b81; margin-bottom: 16px;">Пользователь не указан.</p>
@@ -205,7 +221,7 @@
                 return;
             }
 
-            if (currentUsername && currentUsername.toLowerCase() === targetUsername.toLowerCase()) {
+            if (currentUsername.toLowerCase() === targetUsername.toLowerCase()) {
                 window.location.href = 'profile.html';
                 return;
             }
@@ -246,7 +262,7 @@
                 const likedByUsers = Array.isArray(user.likedByUsers) ? user.likedByUsers : [];
                 const rewardedByUsers = Array.isArray(user.rewardedByUsers) ? user.rewardedByUsers : [];
                 const totalProfileLikes = user.profileLikes || likedByUsers.length || 0;
-                const isLikedByMe = currentUsername && likedByUsers.includes(currentUsername.toLowerCase());
+                const isLikedByMe = likedByUsers.includes(currentUsername.toLowerCase());
                 const formattedTime = typeof formatTimeSpent === 'function'
                     ? formatTimeSpent(user.timeSpentMinutes || 0)
                     : `${user.timeSpentMinutes || 0} мин`;
@@ -293,12 +309,6 @@
 
                 const likeProfileBtn = document.getElementById('like-profile-btn');
                 likeProfileBtn.onclick = async () => {
-                    if (!currentUsername) {
-                        alert('Войдите в аккаунт, чтобы поставить лайк профилю!');
-                        window.location.href = 'login.html';
-                        return;
-                    }
-
                     if (isLikeProcessing) return;
                     isLikeProcessing = true;
                     likeProfileBtn.disabled = true;
