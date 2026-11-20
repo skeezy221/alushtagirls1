@@ -29,46 +29,58 @@ function logoutUser() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const header = document.querySelector('header');
-    if (!header) return;
+    if (header) {
+        // Превращаем логотип в кликабельную ссылку на главную страницу
+        const logoDiv = header.querySelector('.site-logo');
+        if (logoDiv && logoDiv.tagName !== 'A') {
+            const logoLink = document.createElement('a');
+            logoLink.href = 'index.html';
+            logoLink.className = 'site-logo';
+            logoLink.textContent = logoDiv.textContent;
+            logoDiv.replaceWith(logoLink);
+        }
 
-    // Превращаем логотип в кликабельную ссылку на главную страницу
-    const logoDiv = header.querySelector('.site-logo');
-    if (logoDiv && logoDiv.tagName !== 'A') {
-        const logoLink = document.createElement('a');
-        logoLink.href = 'index.html';
-        logoLink.className = 'site-logo';
-        logoLink.textContent = logoDiv.textContent;
-        logoDiv.replaceWith(logoLink);
+        const userPanel = document.createElement('div');
+        userPanel.className = 'user-top-bar';
+
+        const currentUsername = getCurrentUsername();
+
+        if (currentUsername) {
+            userPanel.innerHTML = `
+                <a href="profile.html" class="profile-link">👤 ${currentUsername}</a>
+                <button type="button" class="logout-btn" onclick="logoutUser()">Выйти</button>
+            `;
+            header.appendChild(userPanel);
+
+            try {
+                const userData = await fetchUserByUsername(currentUsername);
+                if (userData) {
+                    const avatarHtml = userData.avatar 
+                        ? `<img src="${userData.avatar}" alt="avatar" class="top-bar-avatar">` 
+                        : '👤';
+                    userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${userData.username}`;
+                }
+            } catch (err) {
+                console.error('Ошибка загрузки профиля в шапке:', err);
+            }
+        } else {
+            userPanel.innerHTML = `
+                <a href="login.html" class="profile-link">Войти</a>
+                <a href="registr.html" class="profile-link">Регистрация</a>
+            `;
+            header.appendChild(userPanel);
+        }
     }
 
-    const userPanel = document.createElement('div');
-    userPanel.className = 'user-top-bar';
-
-    const currentUsername = getCurrentUsername();
-
-    if (currentUsername) {
-        userPanel.innerHTML = `
-            <a href="profile.html" class="profile-link">👤 ${currentUsername}</a>
-            <button type="button" class="logout-btn" onclick="logoutUser()">Выйти</button>
-        `;
-        header.appendChild(userPanel);
-
-        try {
-            const userData = await fetchUserByUsername(currentUsername);
-            if (userData) {
-                const avatarHtml = userData.avatar 
-                    ? `<img src="${userData.avatar}" alt="avatar" class="top-bar-avatar">` 
-                    : '👤';
-                userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${userData.username}`;
+    // Оформляем навигацию (<nav>) в виде нумерованного списка 1) 2) 3)...
+    const nav = document.querySelector('nav');
+    if (nav) {
+        const links = nav.querySelectorAll('a');
+        links.forEach((link, index) => {
+            if (!link.querySelector('.nav-num')) {
+                const text = link.textContent.trim();
+                link.innerHTML = `<span class="nav-num">${index + 1})</span> <span class="nav-label">${text}</span>`;
             }
-        } catch (err) {
-            console.error('Ошибка загрузки профиля в шапке:', err);
-        }
-    } else {
-        userPanel.innerHTML = `
-            <a href="login.html" class="profile-link">Войти</a>
-            <a href="registr.html" class="profile-link">Регистрация</a>
-        `;
-        header.appendChild(userPanel);
+        });
     }
 });
