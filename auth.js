@@ -12,20 +12,24 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// Автоматически устанавливаем иконку вкладки (favicon) с рубиновым сердцем и буквой S
+// Автоматически устанавливаем иконку вкладки (favicon) с логотипом skeezy
 (function setSiteFavicon() {
     const svgFavicon = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
             <defs>
-                <linearGradient id="rubyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#181822"/>
+                    <stop offset="100%" stop-color="#09090d"/>
+                </linearGradient>
+                <linearGradient id="rubyStroke" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="#ff2e55"/>
-                    <stop offset="100%" stop-color="#b00d2d"/>
+                    <stop offset="100%" stop-color="#9e0b28"/>
                 </linearGradient>
             </defs>
-            <rect width="64" height="64" rx="16" fill="#0d0d12"/>
-            <rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="#dc143c" stroke-width="2.5"/>
-            <path d="M32 54 C32 54 10 40 10 24.5 C10 17 15.8 11.5 23 11.5 C27.2 11.5 30.5 13.6 32 16.5 C33.5 13.6 36.8 11.5 41 11.5 C48.2 11.5 54 17 54 24.5 C54 40 32 54 32 54 Z" fill="url(#rubyGrad)"/>
-            <text x="32" y="39" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-weight="900" font-size="25">S</text>
+            <rect width="64" height="64" rx="16" fill="url(#bgGrad)"/>
+            <rect x="2.5" y="2.5" width="59" height="59" rx="13.5" fill="none" stroke="url(#rubyStroke)" stroke-width="3"/>
+            <text x="32" y="36" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-weight="900" font-size="14.5" letter-spacing="0.5">skeezy</text>
+            <line x1="16" y1="43" x2="48" y2="43" stroke="#dc143c" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
     `.trim();
     const encoded = 'data:image/svg+xml,' + encodeURIComponent(svgFavicon);
@@ -99,14 +103,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Оформляем навигацию (<nav>): убираем открытие в новой вкладке и ставим нумерацию 1) 2) 3)...
+    // Оформляем навигацию (<nav>): меняем «Сугубое мнение» на «Поддержка», убираем target="_blank" и ставим нумерацию
     const nav = document.querySelector('nav');
     if (nav) {
         const links = nav.querySelectorAll('a');
         links.forEach((link, index) => {
             link.removeAttribute('target');
+            let text = link.textContent.trim();
+            if (text.toLowerCase().includes('сугубое мнение') || link.getAttribute('href') === 'contacts.html') {
+                text = 'Поддержка';
+            }
             if (!link.querySelector('.nav-num')) {
-                const text = link.textContent.trim();
                 link.innerHTML = `<span class="nav-num">${index + 1})</span> <span class="nav-label">${text}</span>`;
             }
         });
