@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль участника — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
     <style>
         .public-profile-card {
             max-width: 480px;
@@ -44,12 +44,17 @@
 
         .public-username {
             margin: 0 0 6px 0;
-            font-size: 24px;
+            font-size: 23px;
             color: #ffffff;
             text-shadow: 0 0 10px rgba(220, 20, 60, 0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
         }
 
-        .public-username span {
+        .public-username span.at-sign {
             color: #ff6b81;
         }
 
@@ -169,7 +174,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=7"></script>
+    <script src="auth.js?v=8"></script>
     <script>
         const profileBox = document.getElementById('public-profile-box');
         const params = new URLSearchParams(window.location.search);
@@ -208,8 +213,11 @@
                                       (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
 
                 const adminBadge = isTargetAdmin
-                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 10px rgba(220, 20, 60, 0.7); font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 6px; vertical-align: middle;">ADMIN</span>'
+                    ? '<span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 10px rgba(220, 20, 60, 0.7); font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 6px;">ADMIN</span>'
                     : '';
+
+                const titleBadge = typeof renderUserTitleBadge === 'function' ? renderUserTitleBadge(user, false) : '';
+                const frameClass = typeof getAvatarFrameClass === 'function' ? getAvatarFrameClass(user) : '';
 
                 const avatarHtml = user.avatar
                     ? `<img src="${user.avatar}" alt="${user.username}">`
@@ -230,12 +238,12 @@
                 const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
 
                 const displayTitle = user.displayName
-                    ? `${user.displayName} (<span>@</span>${user.username})`
-                    : `<span>@</span>${user.username}`;
+                    ? `${user.displayName} (<span class="at-sign">@</span>${user.username})`
+                    : `<span class="at-sign">@</span>${user.username}`;
 
                 profileBox.innerHTML = `
-                    <div class="public-avatar">${avatarHtml}</div>
-                    <h2 class="public-username">${displayTitle}${adminBadge}</h2>
+                    <div class="public-avatar ${frameClass}">${avatarHtml}</div>
+                    <h2 class="public-username">${displayTitle}${adminBadge}${titleBadge}</h2>
                     <p class="public-reg-date">На сайте с: ${user.regDate || 'недавно'}</p>
 
                     <div class="public-stats-grid">
@@ -269,7 +277,6 @@
 
                 document.getElementById('public-bio-content').textContent = bioText;
 
-                // Обработка лайка профиля
                 const likeProfileBtn = document.getElementById('like-profile-btn');
                 likeProfileBtn.onclick = async () => {
                     if (!currentUsername) {
@@ -280,13 +287,11 @@
 
                     const meKey = currentUsername.toLowerCase();
                     if (likedByUsers.includes(meKey)) {
-                        // Снимаем лайк
                         await userDocRef.update({
                             likedByUsers: firebase.firestore.FieldValue.arrayRemove(meKey),
                             profileLikes: firebase.firestore.FieldValue.increment(-1)
                         });
                     } else {
-                        // Ставим лайк и начисляем +5 очков владельцу профиля и +1 очко тому, кто лайкнул
                         await userDocRef.update({
                             likedByUsers: firebase.firestore.FieldValue.arrayUnion(meKey),
                             profileLikes: firebase.firestore.FieldValue.increment(1),
@@ -298,7 +303,6 @@
                     }
                 };
 
-                // Админская кнопка удаления аккаунта
                 if (hasAdminAccess) {
                     const delBtn = document.createElement('button');
                     delBtn.type = 'button';
