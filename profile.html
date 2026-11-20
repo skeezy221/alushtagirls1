@@ -339,6 +339,51 @@
                 });
                 renderAllActivity();
             });
+
+            // Админ-блок управления пользователями (виден только для @admin)
+            const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
+            if (hasAdminAccess) {
+                const adminUsersWrap = document.createElement('div');
+                adminUsersWrap.style.cssText = 'max-width: 560px; margin: 30px auto; text-align: left;';
+                adminUsersWrap.innerHTML = `
+                    <h2 style="text-align: center;">👑 Управление пользователями</h2>
+                    <div id="admin-users-list" class="activity-feed"></div>
+                `;
+                const activityHeading = activityList.previousElementSibling;
+                activityList.parentNode.insertBefore(adminUsersWrap, activityHeading);
+
+                const usersListEl = document.getElementById('admin-users-list');
+                db.collection('users').onSnapshot(snapshot => {
+                    usersListEl.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const u = doc.data();
+                        const row = document.createElement('div');
+                        row.className = 'activity-item';
+                        row.style.alignItems = 'center';
+                        row.innerHTML = `
+                            <div class="activity-badge">👤</div>
+                            <div class="activity-body">
+                                <div class="activity-title"><span>@${u.username}</span></div>
+                                <p class="activity-preview">${u.email || ''} • Регистрация: ${u.regDate || '-'}</p>
+                            </div>
+                        `;
+                        if (doc.id !== currentUsername.toLowerCase()) {
+                            const banBtn = document.createElement('button');
+                            banBtn.type = 'button';
+                            banBtn.className = 'btn-danger';
+                            banBtn.style.cssText = 'padding: 6px 12px; font-size: 12px;';
+                            banBtn.textContent = 'Удалить';
+                            banBtn.onclick = async () => {
+                                if (confirm(`Удалить аккаунт @${u.username}?`)) {
+                                    await db.collection('users').doc(doc.id).delete();
+                                }
+                            };
+                            row.appendChild(banBtn);
+                        }
+                        usersListEl.appendChild(row);
+                    });
+                });
+            }
         }
     </script>
 
