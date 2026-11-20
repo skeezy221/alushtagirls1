@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в аккаунт — Girls from Alushta</title>
+    <title>Вход — Знакомства Алушта Girls</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,87 +14,150 @@
 
     <main>
         <h1>Вход в аккаунт</h1>
-        <p>Введите свои данные для доступа к профилю.</p>
+        <p>Войдите, чтобы открыть свой профиль и пользоваться всеми функциями.</p>
 
         <form class="auth-form" id="login-form">
             <div class="form-group">
                 <label for="login-username">Логин или Email</label>
-                <input type="text" id="login-username" placeholder="Введите логин или почту" required>
+                <input type="text" id="login-username" name="username" placeholder="Введите ваш логин или почту" required>
             </div>
 
             <div class="form-group">
                 <label for="login-password">Пароль</label>
-                <input type="password" id="login-password" placeholder="Введите пароль" required>
+                <input type="password" id="login-password" name="password" placeholder="••••••••" required>
             </div>
 
             <div id="login-message" class="form-message"></div>
 
-            <button type="submit" class="btn-submit" id="login-btn">Войти</button>
+            <button type="submit" class="btn-submit" id="login-submit-btn">Войти</button>
 
             <p class="auth-switch">Нет аккаунта? <a href="registr.html">Зарегистрироваться</a></p>
         </form>
 
         <nav>
             <a href="index.html">На главную</a>
-            <a href="about.html" target="_blank">Girls From Alushta</a>
-            <a href="contacts.html" target="_blank">Сугубое мнение</a>
-            <a href="baze.html" target="_blank">FAQ</a>
+            <a href="about.html">Girls From Alushta</a>
+            <a href="contacts.html">Поддержка</a>
+            <a href="baze.html">FAQ</a>
+            <a href="registr.html">Регистрация</a>
         </nav>
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="auth.js"></script>
     <script>
+        if (getCurrentUsername()) {
+            window.location.href = 'profile.html';
+        }
+
         const loginForm = document.getElementById('login-form');
-        const loginMessage = document.getElementById('login-message');
-        const loginBtn = document.getElementById('login-btn');
+        const messageBox = document.getElementById('login-message');
+        const submitBtn = document.getElementById('login-submit-btn');
 
         loginForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            const loginInput = document.getElementById('login-username').value.trim().toLowerCase();
-            const passwordInput = document.getElementById('login-password').value;
+            const loginInput = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
 
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Проверка...';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Проверка...';
+            messageBox.textContent = '';
 
             try {
-                let foundUser = null;
+                let userDoc = null;
 
-                const directDoc = await db.collection('users').doc(loginInput).get();
-                if (directDoc.exists && directDoc.data().password === passwordInput) {
-                    foundUser = directDoc.data();
+                // Ищем пользователя в Firestore по логину или по email
+                if (loginInput.includes('@')) {
+                    const snap = await db.collection('users').where('email', '==', loginInput.toLowerCase()).limit(1).get();
+                    if (!snap.empty) {
+                        userDoc = snap.docs[0];
+                    }
                 } else {
-                    const emailQuery = await db.collection('users').where('email', '==', loginInput).get();
-                    emailQuery.forEach(doc => {
-                        if (doc.data().password === passwordInput) {
-                            foundUser = doc.data();
-                        }
-                    });
+                    const doc = await db.collection('users').doc(loginInput.toLowerCase()).get();
+                    if (doc.exists) {
+                        userDoc = doc;
+                    }
                 }
 
-                if (!foundUser) {
-                    loginMessage.textContent = 'Неверный логин/почта или пароль!';
-                    loginMessage.className = 'form-message error';
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = 'Войти';
+                if (!userDoc) {
+                    messageBox.textContent = 'Пользователь с таким логином или почтой не найден.';
+                    messageBox.className = 'form-message error';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Войти';
                     return;
                 }
 
-                localStorage.setItem('alushta_user', foundUser.username);
-                loginMessage.textContent = 'Добро пожаловать, ' + foundUser.username + '!';
-                loginMessage.className = 'form-message success';
+                const userData = userDoc.data();
+
+                // Если аккаунт зарегистрирован через Firebase Auth (есть поле uid) — проверяем подтверждение почты
+                if (userData.uid && userData.email) {
+                    const cred = await auth.signInWithEmailAndPassword(userData.email, password);
+
+                    if (!cred.user.emailVerified) {
+                        messageBox.innerHTML = `
+                            ⚠️ Почта <strong>${userData.email}</strong> ещё не подтверждена!<br>
+                            Перейдите по ссылке из письма в вашей почте.<br>
+                            <button type="button" id="resend-email-btn" style="margin-top: 8px; padding: 6px 12px; border-radius: 8px; border: 1px solid #ff6b81; background: rgba(220,20,60,0.2); color: #fff; cursor: pointer; font-size: 12.5px;">Отправить письмо повторно</button>
+                        `;
+                        messageBox.className = 'form-message error';
+
+                        document.getElementById('resend-email-btn').onclick = async () => {
+                            try {
+                                await cred.user.sendEmailVerification();
+                                messageBox.textContent = 'Новое письмо отправлено! Проверьте почту и папку «Спам».';
+                                messageBox.className = 'form-message success';
+                            } catch (e) {
+                                messageBox.textContent = 'Подождите минуту перед повторной отправкой.';
+                            }
+                        };
+
+                        await auth.signOut();
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Войти';
+                        return;
+                    }
+
+                    // Помечаем в Firestore, что почта подтверждена
+                    if (!userData.emailVerified) {
+                        await db.collection('users').doc(userDoc.id).update({ emailVerified: true });
+                    }
+                } else {
+                    // Совместимость со старыми аккаунтами (например, @admin), созданными до включения Email Verification
+                    if (userData.password !== password) {
+                        messageBox.textContent = 'Неверный пароль!';
+                        messageBox.className = 'form-message error';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Войти';
+                        return;
+                    }
+                }
+
+                localStorage.setItem('alushta_user', userData.username);
+                if (userData.email) {
+                    localStorage.setItem('alushta_email', userData.email.toLowerCase());
+                }
+
+                messageBox.textContent = 'Вход выполнен! Переходим в профиль...';
+                messageBox.className = 'form-message success';
 
                 setTimeout(() => {
                     window.location.href = 'profile.html';
                 }, 700);
             } catch (error) {
-                console.error(error);
-                loginMessage.textContent = 'Ошибка соединения с базой.';
-                loginMessage.className = 'form-message error';
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Войти';
+                console.error('Ошибка входа:', error);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    messageBox.textContent = 'Неверный пароль!';
+                } else if (error.code === 'auth/too-many-requests') {
+                    messageBox.textContent = 'Слишком много попыток входа. Попробуйте чуть позже.';
+                } else {
+                    messageBox.textContent = 'Ошибка при входе: ' + error.message;
+                }
+                messageBox.className = 'form-message error';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Войти';
             }
         });
     </script>
