@@ -64,7 +64,6 @@
             margin: 0 0 18px 0;
         }
 
-        /* Плашка статистики участника (Лайки / Время / Очки) */
         .public-stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -137,7 +136,7 @@
             transition: all 0.2s ease;
         }
 
-        .btn-profile-like:hover {
+        .btn-profile-like:hover:not(:disabled) {
             background: rgba(220, 20, 60, 0.35);
             box-shadow: 0 0 14px rgba(220, 20, 60, 0.55);
         }
@@ -146,6 +145,11 @@
             background: linear-gradient(135deg, #dc143c, #ff2e55);
             border-color: transparent;
             box-shadow: 0 4px 16px rgba(220, 20, 60, 0.6);
+        }
+
+        .btn-profile-like:disabled {
+            opacity: 0.6;
+            cursor: wait;
         }
     </style>
 </head>
@@ -180,6 +184,7 @@
         const params = new URLSearchParams(window.location.search);
         const targetUsername = (params.get('u') || '').trim();
         const currentUsername = getCurrentUsername();
+        let isLikeProcessing = false;
 
         function loadPublicProfile() {
             if (!targetUsername) {
@@ -228,6 +233,7 @@
                     : 'Пользователь пока не добавил информацию о себе.';
 
                 const likedByUsers = Array.isArray(user.likedByUsers) ? user.likedByUsers : [];
+                const rewardedByUsers = Array.isArray(user.rewardedByUsers) ? user.rewardedByUsers : [];
                 const totalProfileLikes = user.profileLikes || likedByUsers.length || 0;
                 const isLikedByMe = currentUsername && likedByUsers.includes(currentUsername.toLowerCase());
                 const formattedTime = typeof formatTimeSpent === 'function'
@@ -285,21 +291,44 @@
                         return;
                     }
 
-                    const meKey = currentUsername.toLowerCase();
-                    if (likedByUsers.includes(meKey)) {
-                        await userDocRef.update({
-                            likedByUsers: firebase.firestore.FieldValue.arrayRemove(meKey),
-                            profileLikes: firebase.firestore.FieldValue.increment(-1)
-                        });
-                    } else {
-                        await userDocRef.update({
-                            likedByUsers: firebase.firestore.FieldValue.arrayUnion(meKey),
-                            profileLikes: firebase.firestore.FieldValue.increment(1),
-                            activityPoints: firebase.firestore.FieldValue.increment(5)
-                        });
-                        if (typeof addUserActivityPoints === 'function') {
-                            await addUserActivityPoints(currentUsername, 1);
+                    if (isLikeProcessing) return;
+                    isLikeProcessing = true;
+                    likeProfileBtn.disabled = true;
+
+                    try {
+                        const meKey = currentUsername.toLowerCase();
+
+                        if (likedByUsers.includes(meKey)) {
+                            // Убираем лайк (очки не начисляются; если лайк был активным — списываем выданный бонус)
+                            const updates = {
+                                likedByUsers: firebase.firestore.FieldValue.arrayRemove(meKey),
+                                profileLikes: firebase.firestore.FieldValue.increment(-1)
+                            };
+                            await userDocRef.update(updates);
+                        } else {
+                            // Ставим лайк; бонусные очки выдаём только 1 раз в жизни от этого аккаунта
+                            const alreadyRewarded = rewardedByUsers.includes(meKey);
+                            const updates = {
+                                likedByUsers: firebase.firestore.FieldValue.arrayUnion(meKey),
+                                profileLikes: firebase.firestore.FieldValue.increment(1)
+                            };
+
+                            if (!alreadyRewarded) {
+                                updates.rewardedByUsers = firebase.firestore.FieldValue.arrayUnion(meKey);
+                                updates.activityPoints = firebase.firestore.FieldValue.increment(5);
+                            }
+
+                            await userDocRef.update(updates);
+
+                            if (!alreadyRewarded && typeof addUserActivityPoints === 'function') {
+                                await addUserActivityPoints(currentUsername, 1);
+                            }
                         }
+                    } catch (err) {
+                        console.error('Ошибка при обновлении лайка:', err);
+                    } finally {
+                        isLikeProcessing = false;
+                        likeProfileBtn.disabled = false;
                     }
                 };
 
