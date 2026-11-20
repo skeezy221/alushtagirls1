@@ -86,7 +86,7 @@
             box-shadow: 0 0 10px rgba(220, 20, 60, 0.4);
         }
 
-        /* Список отправленных обращений пользователя */
+        /* Список отправленных обращений пользователя и панель модератора */
         .my-tickets-section {
             margin-top: 30px;
             text-align: left;
@@ -227,7 +227,7 @@
                 <button type="submit" class="btn-submit" style="width: 100%;" id="question-submit-btn">Отправить вопрос</button>
             </form>
 
-            <!-- История обращений текущего авторизованного пользователя -->
+            <!-- История обращений текущего пользователя / Панель модератора для admin -->
             <div class="my-tickets-section" id="my-tickets-section" style="display: none;">
                 <h3>Ваши отправленные обращения</h3>
                 <div id="my-tickets-list"></div>
@@ -359,47 +359,86 @@
             }
         });
 
-        // Если пользователь вошёл в аккаунт — показываем его отправленные жалобы и вопросы
+        // Для администратора показываем ВСЕ обращения с управлением; для обычных юзеров — только их собственные
         if (currentUsername) {
-            db.collection('support_tickets')
-                .where('sender', '==', currentUsername)
-                .onSnapshot(snapshot => {
-                    if (snapshot.empty) {
-                        myTicketsSection.style.display = 'none';
-                        return;
+            const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
+            const ticketsQuery = hasAdminAccess
+                ? db.collection('support_tickets')
+                : db.collection('support_tickets').where('sender', '==', currentUsername);
+
+            ticketsQuery.onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    myTicketsSection.style.display = 'none';
+                    return;
+                }
+
+                const tickets = [];
+                snapshot.forEach(doc => tickets.push({ id: doc.id, ...doc.data() }));
+                tickets.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                myTicketsSection.style.display = 'block';
+                myTicketsSection.querySelector('h3').textContent = hasAdminAccess
+                    ? `👑 Панель модератора: все обращения (${tickets.length})`
+                    : 'Ваши отправленные обращения';
+
+                myTicketsList.innerHTML = '';
+
+                tickets.forEach(item => {
+                    const isReport = item.type === 'report';
+                    const card = document.createElement('div');
+                    card.className = 'ticket-item';
+
+                    const titleLine = isReport
+                        ? `Жалоба на: ${item.target} (${item.reason})`
+                        : `Вопрос: ${item.topic}`;
+
+                    const senderInfo = hasAdminAccess
+                        ? `<div style="font-size: 12px; color: #ff6b81; margin-bottom: 4px;">Отправитель: @${item.sender || 'Гость'}${item.contact ? ' • Контакт: ' + item.contact : ''}</div>`
+                        : '';
+
+                    card.innerHTML = `
+                        <div class="ticket-header">
+                            <span class="ticket-type-badge ${isReport ? 'badge-report' : 'badge-question'}">
+                                ${isReport ? '🚨 Жалоба' : '💬 Вопрос'}
+                            </span>
+                            <span class="ticket-status">${item.status || 'Отправлено'} • ${item.date || ''}</span>
+                        </div>
+                        ${senderInfo}
+                        <div class="ticket-target"></div>
+                        <p class="ticket-text"></p>
+                    `;
+                    card.querySelector('.ticket-target').textContent = titleLine;
+                    card.querySelector('.ticket-text').textContent = item.text;
+
+                    // Админские кнопки модерации тикета
+                    if (hasAdminAccess) {
+                        const adminActions = document.createElement('div');
+                        adminActions.style.cssText = 'display: flex; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);';
+
+                        const resolveBtn = document.createElement('button');
+                        resolveBtn.type = 'button';
+                        resolveBtn.textContent = '✅ Рассмотрено';
+                        resolveBtn.style.cssText = 'background: rgba(46,229,157,0.18); border: 1px solid #2ee59d; color: #2ee59d; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;';
+                        resolveBtn.onclick = () => db.collection('support_tickets').doc(item.id).update({ status: 'Рассмотрено ✅' });
+
+                        const delBtn = document.createElement('button');
+                        delBtn.type = 'button';
+                        delBtn.textContent = '🗑 Удалить';
+                        delBtn.style.cssText = 'background: rgba(220,20,60,0.2); border: 1px solid #dc143c; color: #ff6b81; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;';
+                        delBtn.onclick = () => {
+                            if (confirm('Удалить это обращение?')) {
+                                db.collection('support_tickets').doc(item.id).delete();
+                            }
+                        };
+
+                        adminActions.appendChild(resolveBtn);
+                        adminActions.appendChild(delBtn);
+                        card.appendChild(adminActions);
                     }
 
-                    const tickets = [];
-                    snapshot.forEach(doc => tickets.push(doc.data()));
-                    tickets.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-                    myTicketsSection.style.display = 'block';
-                    myTicketsList.innerHTML = '';
-
-                    tickets.forEach(item => {
-                        const isReport = item.type === 'report';
-                        const card = document.createElement('div');
-                        card.className = 'ticket-item';
-
-                        const titleLine = isReport
-                            ? `Жалоба на: ${item.target} (${item.reason})`
-                            : `Вопрос: ${item.topic}`;
-
-                        card.innerHTML = `
-                            <div class="ticket-header">
-                                <span class="ticket-type-badge ${isReport ? 'badge-report' : 'badge-question'}">
-                                    ${isReport ? '🚨 Жалоба' : '💬 Вопрос'}
-                                </span>
-                                <span class="ticket-status">${item.status || 'Отправлено'} • ${item.date || ''}</span>
-                            </div>
-                            <div class="ticket-target"></div>
-                            <p class="ticket-text"></p>
-                        `;
-                        card.querySelector('.ticket-target').textContent = titleLine;
-                        card.querySelector('.ticket-text').textContent = item.text;
-                        myTicketsList.appendChild(card);
-                    });
+                    myTicketsList.appendChild(card);
                 });
+            });
         }
     </script>
 
