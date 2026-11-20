@@ -90,13 +90,17 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            text-decoration: none;
+            color: #ffffff;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .found-user-card:hover {
             transform: translateY(-2px);
             border-color: #dc143c;
-            box-shadow: 0 4px 16px rgba(220, 20, 60, 0.3);
+            background: rgba(220, 20, 60, 0.12);
+            box-shadow: 0 4px 16px rgba(220, 20, 60, 0.35);
         }
 
         .found-user-avatar {
@@ -158,6 +162,13 @@
             text-overflow: ellipsis;
         }
 
+        .found-user-arrow {
+            color: #ff6b81;
+            font-size: 18px;
+            font-weight: 700;
+            opacity: 0.75;
+        }
+
         .search-placeholder-msg {
             text-align: center;
             font-size: 13.5px;
@@ -179,7 +190,7 @@
         <!-- Блок поиска пользователей по username -->
         <section class="user-search-box">
             <h2>🔍 Поиск участников</h2>
-            <p class="search-subtitle">Введите логин пользователя (@username), чтобы найти его профиль</p>
+            <p class="search-subtitle">Введите логин пользователя (@username), чтобы открыть его профиль</p>
 
             <div class="search-input-wrap">
                 <input type="text" id="username-search-input" placeholder="Например: @admin или alina..." autocomplete="off">
@@ -210,7 +221,6 @@
 
         let allUsersCache = [];
 
-        // Загружаем список пользователей из облака для мгновенного поиска без задержек
         db.collection('users').onSnapshot(snapshot => {
             allUsersCache = [];
             snapshot.forEach(doc => {
@@ -244,8 +254,9 @@
             }
 
             matches.forEach(user => {
-                const card = document.createElement('div');
+                const card = document.createElement('a');
                 card.className = 'found-user-card';
+                card.href = `user.html?u=${encodeURIComponent(user.username)}`;
 
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'found-user-avatar';
@@ -287,8 +298,13 @@
                 infoDiv.appendChild(topRow);
                 infoDiv.appendChild(bioEl);
 
+                const arrowEl = document.createElement('span');
+                arrowEl.className = 'found-user-arrow';
+                arrowEl.textContent = '›';
+
                 card.appendChild(avatarDiv);
                 card.appendChild(infoDiv);
+                card.appendChild(arrowEl);
                 resultsList.appendChild(card);
             });
         }
