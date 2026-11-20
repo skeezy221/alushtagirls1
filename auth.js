@@ -97,7 +97,6 @@ const SHOP_CATALOG = {
     ]
 };
 
-// Автоматически подключаем стили для всех купленных рамок аватара на любой странице
 (function injectShopFrameStyles() {
     const style = document.createElement('style');
     style.textContent = `
@@ -125,7 +124,13 @@ const SHOP_CATALOG = {
     document.head.appendChild(style);
 })();
 
-// Возвращает HTML бейджа купленного титула пользователя
+// Возвращает основное имя пользователя (если не заполнено — возвращает username)
+function getPublicDisplayName(userData) {
+    if (!userData) return 'Участник';
+    const custom = (userData.displayName || '').trim();
+    return custom !== '' ? custom : (userData.username || 'Участник');
+}
+
 function renderUserTitleBadge(userData, isSmall = false) {
     if (!userData || !userData.equippedTitle) return '';
     const titleObj = SHOP_CATALOG.titles.find(t => t.id === userData.equippedTitle);
@@ -136,14 +141,12 @@ function renderUserTitleBadge(userData, isSmall = false) {
     return `<span style="${titleObj.style} ${sizeStyle} font-weight: 800; letter-spacing: 0.4px; vertical-align: middle; display: inline-block;">${titleObj.name}</span>`;
 }
 
-// Возвращает CSS-класс надетой рамки аватара
 function getAvatarFrameClass(userData) {
     if (!userData || !userData.equippedFrame) return '';
     const frameObj = SHOP_CATALOG.frames.find(f => f.id === userData.equippedFrame);
     return frameObj ? frameObj.cssClass : '';
 }
 
-// Иконка вкладки (favicon) с логотипом skeezy
 (function setSiteFavicon() {
     const svgFavicon = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
@@ -210,7 +213,6 @@ function formatTimeSpent(totalMinutes) {
     return remMins > 0 ? `${hours} ч ${remMins} мин` : `${hours} ч`;
 }
 
-// Фоновый трекер времени на сайте для авторизованного пользователя
 (function startOnlineTimeTracker() {
     const user = getCurrentUsername();
     if (!user) return;
@@ -270,7 +272,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Выпадающее меню «Навигация»
         const oldNav = document.querySelector('nav');
         if (oldNav) {
             const links = Array.from(oldNav.querySelectorAll('a'));
@@ -319,7 +320,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // Правая панель пользователя
         const userPanel = document.createElement('div');
         userPanel.className = 'user-top-bar';
 
@@ -341,13 +341,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (userData.email) {
                         localStorage.setItem('alushta_email', userData.email.toLowerCase());
                     }
+                    const mainName = getPublicDisplayName(userData);
                     const refreshedBadge = isAdminUser() ? redAdminBadge : '';
                     const titleBadge = renderUserTitleBadge(userData, true);
                     const frameClass = getAvatarFrameClass(userData);
                     const avatarHtml = userData.avatar 
                         ? `<img src="${userData.avatar}" alt="avatar" class="top-bar-avatar ${frameClass}">` 
                         : '👤';
-                    userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${userData.username}${refreshedBadge}${titleBadge}`;
+                    userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${mainName}${refreshedBadge}${titleBadge}`;
                 }
             } catch (err) {
                 console.error('Ошибка загрузки профиля в шапке:', err);
