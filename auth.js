@@ -12,6 +12,9 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
+// Список логинов с полными правами администратора (в нижнем регистре)
+const ADMIN_USERS = ['admin'];
+
 // Автоматически устанавливаем иконку вкладки (favicon) с логотипом skeezy
 (function setSiteFavicon() {
     const svgFavicon = `
@@ -48,6 +51,11 @@ function getCurrentUsername() {
     return localStorage.getItem('alushta_user');
 }
 
+function isAdminUser() {
+    const user = getCurrentUsername();
+    return Boolean(user && ADMIN_USERS.includes(user.trim().toLowerCase()));
+}
+
 async function fetchUserByUsername(username) {
     if (!username) return null;
     const doc = await db.collection('users').doc(username.toLowerCase()).get();
@@ -62,7 +70,6 @@ function logoutUser() {
 document.addEventListener('DOMContentLoaded', async () => {
     const header = document.querySelector('header');
     if (header) {
-        // Группируем левую колонку шапки: логотип AlushtaGirls сверху + Навигация снизу
         let leftCol = header.querySelector('.header-left-stack');
         if (!leftCol) {
             leftCol = document.createElement('div');
@@ -84,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Собираем все 5 ссылок из <nav> в компактный выпадающий список «Навигация»
+        // Выпадающее меню «Навигация»
         const oldNav = document.querySelector('nav');
         if (oldNav) {
             const links = Array.from(oldNav.querySelectorAll('a'));
@@ -119,17 +126,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             dropdown.appendChild(toggleBtn);
             dropdown.appendChild(menuList);
             leftCol.appendChild(dropdown);
-
-            // Удаляем старый нижний блок навигации
             oldNav.remove();
 
-            // Открытие / закрытие списка по клику
             toggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 dropdown.classList.toggle('open');
             });
 
-            // Закрытие при клике в любое другое место экрана
             document.addEventListener('click', (e) => {
                 if (!dropdown.contains(e.target)) {
                     dropdown.classList.remove('open');
@@ -142,6 +145,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         userPanel.className = 'user-top-bar';
 
         const currentUsername = getCurrentUsername();
+        const adminBadge = isAdminUser()
+            ? '<span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px;">ADMIN</span>'
+            : '';
 
         if (currentUsername) {
             userPanel.innerHTML = `
+                <a href="profile.html" class="profile-link">👤 ${currentUsername}${adminBadge}</a>
+                <button type="button" class="logout-btn" onclick="logoutUser()">Выйти</button>
+            `;
+            header.appendChild(userPanel);
+
+            try {
+                const userData = await fetchUserByUsername(currentUsername);
+                if (userData) {
+                    const avatarHtml = userData.avatar 
+                        ? `<img src="${userData.avatar}" alt="avatar" class="top-bar-avatar">` 
+                        : '👤';
+                    userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${userData.username}${adminBadge}`;
+                }
+            } catch (err) {
+                console.error('Ошибка загрузки профиля в шапке:', err);
+            }
+        } else {
+            userPanel.innerHTML = `
+                <a href="login.html" class="profile-link">Войти</a>
+                <a href="registr.html" class="profile-link">Регистрация</a>
+            `;
+            header.appendChild(userPanel);
+        }
+    }
+});
