@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
     <style>
         /* Две главные кнопки действий */
         .hero-action-buttons {
@@ -65,7 +65,7 @@
             box-shadow: 0 0 28px rgba(220, 20, 60, 0.85);
         }
 
-        /* Блок поиска пользователей (появляется по нажатию кнопки) */
+        /* Блок поиска пользователей */
         .user-search-box {
             max-width: 500px;
             margin: 0 auto 30px auto;
@@ -218,15 +218,19 @@
             font-size: 15px;
             font-weight: 700;
             color: #ffffff;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .found-user-name span {
+        .found-user-name span.at-sign {
             color: #ff6b81;
         }
 
         .found-user-date {
             font-size: 11.5px;
             color: rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
         }
 
         .found-user-bio {
@@ -283,7 +287,6 @@
             color: rgba(255, 255, 255, 0.65);
         }
 
-        /* 3 вкладки категорий */
         .leaderboard-tabs {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -367,18 +370,19 @@
             font-size: 14.5px;
             font-weight: 700;
             color: #ffffff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .lb-username span {
+        .lb-username span.at-sign {
             color: #ff6b81;
         }
 
         .lb-subtext {
             font-size: 12px;
             color: rgba(255, 255, 255, 0.55);
+            margin-top: 2px;
         }
 
         .lb-score-pill {
@@ -471,7 +475,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=7"></script>
+    <script src="auth.js?v=8"></script>
     <script>
         const toggleSearchBtn = document.getElementById('toggle-search-btn');
         const closeSearchPanelBtn = document.getElementById('close-search-panel');
@@ -487,7 +491,6 @@
         let likesMapByAccount = {};
         let activeLbCategory = 'likes';
 
-        // Открытие и закрытие блока поиска
         toggleSearchBtn.addEventListener('click', () => {
             const isHidden = userSearchBox.style.display === 'none';
             if (isHidden) {
@@ -505,7 +508,6 @@
             toggleSearchBtn.classList.remove('active');
         });
 
-        // Переключение вкладок Топа
         lbTabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 lbTabButtons.forEach(b => b.classList.remove('active'));
@@ -515,7 +517,6 @@
             });
         });
 
-        // Слушаем пользователей из Firestore
         db.collection('users').onSnapshot(snapshot => {
             allUsersCache = [];
             snapshot.forEach(doc => {
@@ -527,7 +528,6 @@
             renderLeaderboard();
         });
 
-        // Считаем суммарные лайки на анкетах каждого аккаунта
         db.collection('girls_profiles').onSnapshot(snapshot => {
             likesMapByAccount = {};
             snapshot.forEach(doc => {
@@ -583,8 +583,9 @@
                 else if (idx === 2) rankEl.textContent = '🥉';
                 else rankEl.textContent = `#${idx + 1}`;
 
+                const frameClass = typeof getAvatarFrameClass === 'function' ? getAvatarFrameClass(user) : '';
                 const avatarDiv = document.createElement('div');
-                avatarDiv.className = 'found-user-avatar';
+                avatarDiv.className = 'found-user-avatar ' + frameClass;
                 avatarDiv.style.width = '40px';
                 avatarDiv.style.height = '40px';
                 avatarDiv.style.fontSize = '16px';
@@ -603,11 +604,14 @@
                 const isTargetAdmin = (typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase())) ||
                                       (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
 
+                const adminBadgeHtml = isTargetAdmin
+                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 5px; margin-left: 5px;">ADMIN</span>'
+                    : '';
+                const titleBadgeHtml = typeof renderUserTitleBadge === 'function' ? renderUserTitleBadge(user, true) : '';
+
                 const nameEl = document.createElement('div');
                 nameEl.className = 'lb-username';
-                nameEl.innerHTML = `<span>@</span>${user.username}` + (isTargetAdmin
-                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 5px; margin-left: 4px;">ADMIN</span>'
-                    : '');
+                nameEl.innerHTML = `<span class="at-sign">@</span>${user.username}${adminBadgeHtml}${titleBadgeHtml}`;
 
                 const subEl = document.createElement('div');
                 subEl.className = 'lb-subtext';
@@ -661,8 +665,9 @@
                 card.className = 'found-user-card';
                 card.href = `user.html?u=${encodeURIComponent(user.username)}`;
 
+                const frameClass = typeof getAvatarFrameClass === 'function' ? getAvatarFrameClass(user) : '';
                 const avatarDiv = document.createElement('div');
-                avatarDiv.className = 'found-user-avatar';
+                avatarDiv.className = 'found-user-avatar ' + frameClass;
                 if (user.avatar) {
                     const img = document.createElement('img');
                     img.src = user.avatar;
@@ -682,9 +687,13 @@
                 nameEl.className = 'found-user-name';
                 const isTargetAdmin = (typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase())) ||
                                       (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
-                nameEl.innerHTML = `<span>@</span>${user.username}` + (isTargetAdmin
-                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 8px rgba(220, 20, 60, 0.7); font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 5px; margin-left: 4px;">ADMIN</span>'
-                    : '');
+
+                const adminBadgeHtml = isTargetAdmin
+                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 8px rgba(220, 20, 60, 0.7); font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 5px; margin-left: 5px;">ADMIN</span>'
+                    : '';
+                const titleBadgeHtml = typeof renderUserTitleBadge === 'function' ? renderUserTitleBadge(user, true) : '';
+
+                nameEl.innerHTML = `<span class="at-sign">@</span>${user.username}${adminBadgeHtml}${titleBadgeHtml}`;
 
                 const dateEl = document.createElement('span');
                 dateEl.className = 'found-user-date';
