@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
     <style>
         /* Две главные кнопки действий */
         .hero-action-buttons {
@@ -67,8 +67,8 @@
 
         /* Блок поиска пользователей (появляется по нажатию кнопки) */
         .user-search-box {
-            max-width: 480px;
-            margin: 0 auto 35px auto;
+            max-width: 500px;
+            margin: 0 auto 30px auto;
             background: rgba(12, 12, 18, 0.92);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(220, 20, 60, 0.5);
@@ -77,18 +77,12 @@
             box-shadow: 0 14px 36px rgba(0, 0, 0, 0.85), 0 0 22px rgba(220, 20, 60, 0.22);
             text-align: left;
             box-sizing: border-box;
-            animation: fadeInSearch 0.25s ease;
+            animation: fadeInBox 0.25s ease;
         }
 
-        @keyframes fadeInSearch {
-            from {
-                opacity: 0;
-                transform: translateY(-8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes fadeInBox {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .search-box-header {
@@ -114,7 +108,6 @@
             border-radius: 50%;
             cursor: pointer;
             font-size: 14px;
-            transition: background 0.2s ease, color 0.2s ease;
         }
 
         .close-search-panel:hover {
@@ -144,12 +137,6 @@
             font-size: 15px;
             outline: none;
             box-sizing: border-box;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .search-input-wrap input:focus {
-            border-color: #ff2e55;
-            box-shadow: 0 0 14px rgba(220, 20, 60, 0.45);
         }
 
         .clear-search-btn {
@@ -161,10 +148,6 @@
             font-size: 16px;
             cursor: pointer;
             display: none;
-        }
-
-        .clear-search-btn:hover {
-            color: #ff4d6d;
         }
 
         .search-results-list {
@@ -186,7 +169,6 @@
             gap: 14px;
             text-decoration: none;
             color: #ffffff;
-            cursor: pointer;
             transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -198,15 +180,15 @@
         }
 
         .found-user-avatar {
-            width: 48px;
-            height: 48px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             background: linear-gradient(135deg, #dc143c, #8b0000);
             border: 2px solid #dc143c;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
             color: #ffffff;
             overflow: hidden;
@@ -233,7 +215,7 @@
         }
 
         .found-user-name {
-            font-size: 15.5px;
+            font-size: 15px;
             font-weight: 700;
             color: #ffffff;
         }
@@ -260,7 +242,6 @@
             color: #ff6b81;
             font-size: 18px;
             font-weight: 700;
-            opacity: 0.75;
         }
 
         .search-placeholder-msg {
@@ -268,6 +249,157 @@
             font-size: 13.5px;
             color: rgba(255, 255, 255, 0.55);
             margin: 8px 0 0 0;
+        }
+
+        /* --- Окно «Топ активных пользователей» --- */
+        .leaderboard-card {
+            max-width: 540px;
+            margin: 10px auto 40px auto;
+            background: rgba(12, 12, 18, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(220, 20, 60, 0.48);
+            border-radius: 22px;
+            padding: 24px 20px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 26px rgba(220, 20, 60, 0.22);
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        .leaderboard-header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .leaderboard-header h2 {
+            margin: 0 0 4px 0;
+            font-size: 21px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(220, 20, 60, 0.65);
+        }
+
+        .leaderboard-header p {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        /* 3 вкладки категорий */
+        .leaderboard-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(220, 20, 60, 0.3);
+            padding: 5px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .lb-tab-btn {
+            padding: 10px 8px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .lb-tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .lb-tab-btn.active {
+            background: linear-gradient(135deg, #dc143c, #ff2e55);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(220, 20, 60, 0.55);
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            text-decoration: none;
+            color: #ffffff;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .lb-row:hover {
+            transform: translateY(-2px);
+            border-color: #dc143c;
+            background: rgba(220, 20, 60, 0.12);
+        }
+
+        .lb-row.rank-1 {
+            border-color: rgba(245, 176, 65, 0.55);
+            background: linear-gradient(90deg, rgba(245, 176, 65, 0.12), rgba(255, 255, 255, 0.04));
+        }
+
+        .lb-rank {
+            width: 30px;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.65);
+            flex-shrink: 0;
+        }
+
+        .lb-user-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lb-username {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lb-username span {
+            color: #ff6b81;
+        }
+
+        .lb-subtext {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .lb-score-pill {
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(220, 20, 60, 0.18);
+            border: 1px solid rgba(220, 20, 60, 0.55);
+            color: #ff758f;
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .lb-hint-footer {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
         }
     </style>
 </head>
@@ -281,7 +413,7 @@
         <h1>Знакомства Алушта Girls</h1>
         <p>Общение, новые встречи и атмосфера побережья Алушты.</p>
 
-        <!-- Две кнопки рядом с небольшим интервалом -->
+        <!-- Две главные кнопки -->
         <div class="hero-action-buttons">
             <button type="button" class="hero-btn-search" id="toggle-search-btn">🔍 Найти пользователя</button>
             <a href="about.html" class="hero-btn-dating">♥ Начать просмотр анкет</a>
@@ -305,6 +437,28 @@
             </div>
         </section>
 
+        <!-- Окно «Топ активных пользователей» по 3 категориям -->
+        <section class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2>🏆 Топ активных пользователей</h2>
+                <p>Рейтинг участников сообщества в реальном времени</p>
+            </div>
+
+            <div class="leaderboard-tabs">
+                <button type="button" class="lb-tab-btn active" data-category="likes">♥ Лайки профиля</button>
+                <button type="button" class="lb-tab-btn" data-category="time">⏱ Время на сайте</button>
+                <button type="button" class="lb-tab-btn" data-category="points">⚡ Очки</button>
+            </div>
+
+            <div class="leaderboard-list" id="leaderboard-list">
+                <p class="search-placeholder-msg">Загрузка рейтинга...</p>
+            </div>
+
+            <div class="lb-hint-footer">
+                Очки начисляются за анкеты (+15), полученные лайки (+5), свайпы (+2) и время на сайте (+1 за 5 мин)
+            </div>
+        </section>
+
         <nav>
             <a href="index.html">Главная</a>
             <a href="about.html">Girls From Alushta</a>
@@ -317,7 +471,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=6"></script>
+    <script src="auth.js?v=7"></script>
     <script>
         const toggleSearchBtn = document.getElementById('toggle-search-btn');
         const closeSearchPanelBtn = document.getElementById('close-search-panel');
@@ -326,9 +480,14 @@
         const clearBtn = document.getElementById('clear-search-btn');
         const resultsList = document.getElementById('search-results-list');
 
-        let allUsersCache = [];
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const lbTabButtons = document.querySelectorAll('.lb-tab-btn');
 
-        // Открытие и закрытие блока поиска по кнопке «Найти пользователя»
+        let allUsersCache = [];
+        let likesMapByAccount = {};
+        let activeLbCategory = 'likes';
+
+        // Открытие и закрытие блока поиска
         toggleSearchBtn.addEventListener('click', () => {
             const isHidden = userSearchBox.style.display === 'none';
             if (isHidden) {
@@ -346,7 +505,17 @@
             toggleSearchBtn.classList.remove('active');
         });
 
-        // Подгрузка пользователей из облака для мгновенного поиска
+        // Переключение вкладок Топа
+        lbTabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                lbTabButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeLbCategory = btn.dataset.category;
+                renderLeaderboard();
+            });
+        });
+
+        // Слушаем пользователей из Firestore
         db.collection('users').onSnapshot(snapshot => {
             allUsersCache = [];
             snapshot.forEach(doc => {
@@ -355,7 +524,115 @@
             if (searchInput.value.trim() !== '') {
                 renderSearchResults(searchInput.value);
             }
+            renderLeaderboard();
         });
+
+        // Считаем суммарные лайки на анкетах каждого аккаунта
+        db.collection('girls_profiles').onSnapshot(snapshot => {
+            likesMapByAccount = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const owner = (data.ownerAccount || '').toLowerCase();
+                const count = Array.isArray(data.likedBy) ? data.likedBy.length : 0;
+                if (owner) {
+                    likesMapByAccount[owner] = (likesMapByAccount[owner] || 0) + count;
+                }
+            });
+            renderLeaderboard();
+        });
+
+        function renderLeaderboard() {
+            if (allUsersCache.length === 0) {
+                leaderboardList.innerHTML = '<p class="search-placeholder-msg">Пока нет зарегистрированных участников.</p>';
+                return;
+            }
+
+            const enriched = allUsersCache.map(u => {
+                const key = (u.username || '').toLowerCase();
+                const totalLikes = (u.profileLikes || 0) + (likesMapByAccount[key] || 0);
+                const totalMinutes = u.timeSpentMinutes || 0;
+                const totalPoints = u.activityPoints || 0;
+                return {
+                    ...u,
+                    totalLikes,
+                    totalMinutes,
+                    totalPoints
+                };
+            });
+
+            if (activeLbCategory === 'likes') {
+                enriched.sort((a, b) => b.totalLikes - a.totalLikes || b.totalPoints - a.totalPoints);
+            } else if (activeLbCategory === 'time') {
+                enriched.sort((a, b) => b.totalMinutes - a.totalMinutes || b.totalPoints - a.totalPoints);
+            } else {
+                enriched.sort((a, b) => b.totalPoints - a.totalPoints || b.totalMinutes - a.totalMinutes);
+            }
+
+            const topUsers = enriched.slice(0, 7);
+            leaderboardList.innerHTML = '';
+
+            topUsers.forEach((user, idx) => {
+                const row = document.createElement('a');
+                row.className = 'lb-row' + (idx === 0 ? ' rank-1' : '');
+                row.href = `user.html?u=${encodeURIComponent(user.username)}`;
+
+                const rankEl = document.createElement('div');
+                rankEl.className = 'lb-rank';
+                if (idx === 0) rankEl.textContent = '🥇';
+                else if (idx === 1) rankEl.textContent = '🥈';
+                else if (idx === 2) rankEl.textContent = '🥉';
+                else rankEl.textContent = `#${idx + 1}`;
+
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'found-user-avatar';
+                avatarDiv.style.width = '40px';
+                avatarDiv.style.height = '40px';
+                avatarDiv.style.fontSize = '16px';
+                if (user.avatar) {
+                    const img = document.createElement('img');
+                    img.src = user.avatar;
+                    img.alt = user.username;
+                    avatarDiv.appendChild(img);
+                } else {
+                    avatarDiv.textContent = user.username.charAt(0).toUpperCase();
+                }
+
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'lb-user-meta';
+
+                const isTargetAdmin = (typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase())) ||
+                                      (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'lb-username';
+                nameEl.innerHTML = `<span>@</span>${user.username}` + (isTargetAdmin
+                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 5px; margin-left: 4px;">ADMIN</span>'
+                    : '');
+
+                const subEl = document.createElement('div');
+                subEl.className = 'lb-subtext';
+                subEl.textContent = `⚡ ${user.totalPoints} очк. • ♥ ${user.totalLikes} • ⏱ ${formatTimeSpent(user.totalMinutes)}`;
+
+                metaDiv.appendChild(nameEl);
+                metaDiv.appendChild(subEl);
+
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'lb-score-pill';
+                if (activeLbCategory === 'likes') {
+                    badgeEl.textContent = `♥ ${user.totalLikes}`;
+                } else if (activeLbCategory === 'time') {
+                    badgeEl.textContent = `⏱ ${formatTimeSpent(user.totalMinutes)}`;
+                } else {
+                    badgeEl.textContent = `⚡ ${user.totalPoints} очк.`;
+                }
+
+                row.appendChild(rankEl);
+                row.appendChild(avatarDiv);
+                row.appendChild(metaDiv);
+                row.appendChild(badgeEl);
+                leaderboardList.appendChild(row);
+            });
+        }
 
         function renderSearchResults(rawQuery) {
             const cleanQuery = rawQuery.trim().replace(/^@+/, '').toLowerCase();
