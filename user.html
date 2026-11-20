@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль участника — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=6">
     <style>
         .public-profile-card {
             max-width: 480px;
@@ -117,8 +117,9 @@
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js"></script>
+    <script src="auth.js?v=6"></script>
     <script>
         const profileBox = document.getElementById('public-profile-box');
         const params = new URLSearchParams(window.location.search);
@@ -154,9 +155,11 @@
                 const user = doc.data();
                 document.title = `@${user.username} — Знакомства Алушта Girls`;
 
-                const isTargetAdmin = typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase());
+                const isTargetAdmin = (typeof ADMIN_USERS !== 'undefined' && ADMIN_USERS.includes(user.username.toLowerCase())) ||
+                                      (typeof ADMIN_EMAILS !== 'undefined' && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
+
                 const adminBadge = isTargetAdmin
-                    ? ' <span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 6px; vertical-align: middle;">ADMIN</span>'
+                    ? ' <span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 10px rgba(220, 20, 60, 0.7); font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 6px; vertical-align: middle;">ADMIN</span>'
                     : '';
 
                 const avatarHtml = user.avatar
@@ -169,9 +172,13 @@
 
                 const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
 
+                const displayTitle = user.displayName
+                    ? `${user.displayName} (<span>@</span>${user.username})`
+                    : `<span>@</span>${user.username}`;
+
                 profileBox.innerHTML = `
                     <div class="public-avatar">${avatarHtml}</div>
-                    <h2 class="public-username"><span>@</span>${user.username}${adminBadge}</h2>
+                    <h2 class="public-username">${displayTitle}${adminBadge}</h2>
                     <p class="public-reg-date">На сайте с: ${user.regDate || 'недавно'}</p>
 
                     <div class="public-bio-box">
