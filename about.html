@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Girls From Alushta — AlushtaGirls</title>
+    <title>Girls From Alushta — Знакомства Алушта Girls</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,44 +14,295 @@
 
     <main>
         <h1>Girls From Alushta</h1>
-        <p>Наблюдения, образы и истории из жизни побережья.</p>
+        <p>Анкеты девушек Алушты для общения, прогулок и новых знакомств.</p>
 
-        <section class="cards-grid">
-            <article class="profile-card">
-                <div class="card-badge">#Набережная</div>
-                <h2>Королева променада</h2>
-                <p class="card-text">
-                    Всегда в центре внимания на центральной набережной. Считает, что весь курортный сезон крутится исключительно вокруг её планов на вечер.
-                </p>
-            </article>
+        <!-- Кнопка открытия формы -->
+        <div class="dating-top-actions">
+            <button type="button" class="btn-submit" id="toggle-form-btn">+ Разместить свою анкету</button>
+        </div>
 
-            <article class="profile-card">
-                <div class="card-badge">#Атмосфера</div>
-                <h2>Летний мираж</h2>
-                <p class="card-text">
-                    Появляется с первыми тёплыми днями мая и исчезает в сентябре. Оставляет после себя только красивые фото и недосказанность.
-                </p>
-            </article>
+        <!-- Форма создания независимой анкеты -->
+        <form class="dating-form" id="dating-form" style="display: none;">
+            <h2>Новая анкета</h2>
+            <p class="form-hint">Анкета не привязана к вашему профилю — можно указать любое имя.</p>
 
-            <article class="profile-card">
-                <div class="card-badge">#Характер</div>
-                <h2>Южный ветер</h2>
-                <p class="card-text">
-                    Переменчивое настроение, как погода в горах над Алуштой: от яркого солнца до внезапного летнего ливня за пять минут.
-                </p>
-            </article>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="girl-name">Ваше имя *</label>
+                    <input type="text" id="girl-name" placeholder="Например: Алина" maxlength="30" required>
+                </div>
+
+                <div class="form-group age-group">
+                    <label for="girl-age">Возраст *</label>
+                    <input type="number" id="girl-age" placeholder="20" min="16" max="99" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="girl-photo">Фотография *</label>
+                <div class="photo-upload-box">
+                    <label for="girl-photo" class="btn-outline photo-select-btn">📷 Выбрать фото</label>
+                    <input type="file" id="girl-photo" accept="image/*" style="display: none;" required>
+                    <span id="photo-file-name" class="photo-file-name">Файл не выбран</span>
+                </div>
+                <div id="photo-preview-wrap" class="photo-preview-wrap" style="display: none;">
+                    <img id="photo-preview" src="" alt="Предпросмотр">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="girl-bio">О себе (интересы, кого ищете, контакт для связи) *</label>
+                <textarea id="girl-bio" rows="4" placeholder="Например: Люблю вечерние прогулки по набережной, кофе и спонтанные поездки. Пишите в ТГ: @..." maxlength="500" required></textarea>
+            </div>
+
+            <div id="dating-message" class="form-message"></div>
+
+            <div class="form-buttons">
+                <button type="submit" class="btn-submit" id="submit-card-btn">Опубликовать анкету</button>
+                <button type="button" class="btn-outline" id="cancel-form-btn">Отмена</button>
+            </div>
+        </form>
+
+        <!-- Сетка анкет из облака -->
+        <section class="dating-grid" id="dating-grid">
+            <p class="empty-posts">Загрузка анкет...</p>
         </section>
 
         <nav>
-            <a href="index.html">На главную</a>
-            <a href="contacts.html" target="_blank">Сугубое мнение</a>
-            <a href="baze.html" target="_blank">FAQ</a>
-            <a href="registr.html" target="_blank">Регистрация</a>
+            <a href="index.html">Главная</a>
+            <a href="about.html">Girls From Alushta</a>
+            <a href="contacts.html">Сугубое мнение</a>
+            <a href="baze.html">FAQ</a>
+            <a href="registr.html">Регистрация</a>
         </nav>
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="auth.js"></script>
+    <script>
+        const toggleFormBtn = document.getElementById('toggle-form-btn');
+        const cancelFormBtn = document.getElementById('cancel-form-btn');
+        const datingForm = document.getElementById('dating-form');
+        const photoInput = document.getElementById('girl-photo');
+        const photoFileName = document.getElementById('photo-file-name');
+        const photoPreviewWrap = document.getElementById('photo-preview-wrap');
+        const photoPreview = document.getElementById('photo-preview');
+        const datingMessage = document.getElementById('dating-message');
+        const submitCardBtn = document.getElementById('submit-card-btn');
+        const datingGrid = document.getElementById('dating-grid');
+
+        let compressedPhotoBase64 = '';
+
+        // Уникальный локальный ключ браузера для управления своими анкетами без привязки к аккаунту
+        let deviceToken = localStorage.getItem('alushta_device_token');
+        if (!deviceToken) {
+            deviceToken = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
+            localStorage.setItem('alushta_device_token', deviceToken);
+        }
+
+        // Открытие и закрытие формы
+        toggleFormBtn.addEventListener('click', () => {
+            datingForm.style.display = 'block';
+            toggleFormBtn.style.display = 'none';
+        });
+
+        cancelFormBtn.addEventListener('click', () => {
+            datingForm.style.display = 'none';
+            toggleFormBtn.style.display = 'inline-block';
+            datingForm.reset();
+            compressedPhotoBase64 = '';
+            photoPreviewWrap.style.display = 'none';
+            photoFileName.textContent = 'Файл не выбран';
+            datingMessage.textContent = '';
+        });
+
+        // Обработка и сжатие выбранного фото
+        photoInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            photoFileName.textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 600;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxDim) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        }
+                    } else {
+                        if (height > maxDim) {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    compressedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.78);
+                    photoPreview.src = compressedPhotoBase64;
+                    photoPreviewWrap.style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Отправка анкеты в Firestore
+        datingForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('girl-name').value.trim();
+            const age = parseInt(document.getElementById('girl-age').value, 10);
+            const bio = document.getElementById('girl-bio').value.trim();
+
+            if (!compressedPhotoBase64) {
+                datingMessage.textContent = 'Пожалуйста, выберите фотографию для анкеты!';
+                datingMessage.className = 'form-message error';
+                return;
+            }
+
+            submitCardBtn.disabled = true;
+            submitCardBtn.textContent = 'Публикация...';
+
+            try {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+
+                await db.collection('girls_profiles').add({
+                    name: name,
+                    age: age,
+                    photo: compressedPhotoBase64,
+                    bio: bio,
+                    likes: 0,
+                    ownerToken: deviceToken,
+                    date: dateStr,
+                    createdAt: Date.now()
+                });
+
+                datingForm.reset();
+                compressedPhotoBase64 = '';
+                photoPreviewWrap.style.display = 'none';
+                photoFileName.textContent = 'Файл не выбран';
+                datingForm.style.display = 'none';
+                toggleFormBtn.style.display = 'inline-block';
+            } catch (err) {
+                console.error(err);
+                datingMessage.textContent = 'Ошибка при публикации. Попробуйте выбрать фото меньшего размера.';
+                datingMessage.className = 'form-message error';
+            } finally {
+                submitCardBtn.disabled = false;
+                submitCardBtn.textContent = 'Опубликовать анкету';
+            }
+        });
+
+        // Отображение ленты анкет в реальном времени
+        db.collection('girls_profiles').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            datingGrid.innerHTML = '';
+
+            if (snapshot.empty) {
+                datingGrid.innerHTML = '<p class="empty-posts">Пока нет ни одной анкеты. Станьте первой!</p>';
+                return;
+            }
+
+            const likedCards = JSON.parse(localStorage.getItem('alushta_liked_girls') || '[]');
+
+            snapshot.forEach(doc => {
+                const cardData = doc.data();
+                const cardId = doc.id;
+                const isLiked = likedCards.includes(cardId);
+                const isOwner = cardData.ownerToken === deviceToken;
+
+                const card = document.createElement('article');
+                card.className = 'dating-card';
+
+                const imgWrap = document.createElement('div');
+                imgWrap.className = 'dating-photo-box';
+                const img = document.createElement('img');
+                img.src = cardData.photo;
+                img.alt = cardData.name;
+                imgWrap.appendChild(img);
+
+                const content = document.createElement('div');
+                content.className = 'dating-card-content';
+
+                const titleRow = document.createElement('div');
+                titleRow.className = 'dating-title-row';
+
+                const nameH2 = document.createElement('h2');
+                nameH2.textContent = `${cardData.name}, ${cardData.age}`;
+                titleRow.appendChild(nameH2);
+
+                if (isOwner) {
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'btn-delete-post';
+                    delBtn.textContent = 'Удалить';
+                    delBtn.onclick = async () => {
+                        await db.collection('girls_profiles').doc(cardId).delete();
+                    };
+                    titleRow.appendChild(delBtn);
+                }
+
+                const bioP = document.createElement('p');
+                bioP.className = 'dating-bio';
+                bioP.textContent = cardData.bio;
+
+                const footer = document.createElement('div');
+                footer.className = 'dating-card-footer';
+
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'opinion-date';
+                dateSpan.textContent = cardData.date || '';
+
+                const likeBtn = document.createElement('button');
+                likeBtn.type = 'button';
+                likeBtn.className = 'btn-like' + (isLiked ? ' liked' : '');
+                likeBtn.innerHTML = `<span class="heart-icon">♥</span> <span class="like-count">${cardData.likes || 0}</span>`;
+
+                likeBtn.onclick = async () => {
+                    let currentLikesList = JSON.parse(localStorage.getItem('alushta_liked_girls') || '[]');
+                    const cardRef = db.collection('girls_profiles').doc(cardId);
+
+                    if (currentLikesList.includes(cardId)) {
+                        currentLikesList = currentLikesList.filter(id => id !== cardId);
+                        localStorage.setItem('alushta_liked_girls', JSON.stringify(currentLikesList));
+                        await cardRef.update({
+                            likes: firebase.firestore.FieldValue.increment(-1)
+                        });
+                    } else {
+                        currentLikesList.push(cardId);
+                        localStorage.setItem('alushta_liked_girls', JSON.stringify(currentLikesList));
+                        await cardRef.update({
+                            likes: firebase.firestore.FieldValue.increment(1)
+                        });
+                    }
+                };
+
+                footer.appendChild(dateSpan);
+                footer.appendChild(likeBtn);
+
+                content.appendChild(titleRow);
+                content.appendChild(bioP);
+                content.appendChild(footer);
+
+                card.appendChild(imgWrap);
+                card.appendChild(content);
+                datingGrid.appendChild(card);
+            });
+        });
+    </script>
+
 </body>
 </html>
