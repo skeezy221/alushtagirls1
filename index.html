@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=12">
     <style>
         .hero-action-buttons {
             display: flex;
@@ -111,6 +111,31 @@
         .close-search-panel:hover {
             background: #dc143c;
             color: #fff;
+        }
+
+        /* Заглушка блокировки поиска для гостей */
+        .guest-lock-card {
+            text-align: center;
+            padding: 12px 6px 6px 6px;
+        }
+
+        .guest-lock-icon {
+            font-size: 34px;
+            margin-bottom: 8px;
+        }
+
+        .guest-lock-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.85);
+            margin: 0 0 16px 0;
+        }
+
+        .guest-lock-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .search-subtitle {
@@ -421,21 +446,37 @@
             <a href="about.html" class="hero-btn-dating">♥ Начать просмотр анкет</a>
         </div>
 
-        <!-- Раскрывающийся блок поиска пользователей -->
+        <!-- Раскрывающийся блок поиска пользователей (заблокирован для гостей) -->
         <section class="user-search-box" id="user-search-box" style="display: none;">
             <div class="search-box-header">
                 <h2>Поиск участников</h2>
                 <button type="button" class="close-search-panel" id="close-search-panel" title="Закрыть поиск">✕</button>
             </div>
-            <p class="search-subtitle">Введите имя участника или его @логин, чтобы открыть профиль</p>
 
-            <div class="search-input-wrap">
-                <input type="text" id="username-search-input" placeholder="Например: Skeezy или @admin..." autocomplete="off">
-                <button type="button" class="clear-search-btn" id="clear-search-btn" title="Очистить">✕</button>
+            <!-- Заглушка для незарегистрированных гостей -->
+            <div class="guest-lock-card" id="search-guest-lock" style="display: none;">
+                <div class="guest-lock-icon">🔒</div>
+                <p class="guest-lock-text">
+                    Поиск участников и просмотр профилей доступны только зарегистрированным пользователям сообщества.
+                </p>
+                <div class="guest-lock-actions">
+                    <a href="login.html" class="btn-submit" style="padding: 10px 20px; font-size: 14px;">Войти</a>
+                    <a href="registr.html" class="btn-outline" style="padding: 10px 20px; font-size: 14px;">Регистрация</a>
+                </div>
             </div>
 
-            <div class="search-results-list" id="search-results-list">
-                <p class="search-placeholder-msg">Начните вводить имя или никнейм для поиска...</p>
+            <!-- Рабочий поиск для авторизованных пользователей -->
+            <div id="search-authorized-area" style="display: none;">
+                <p class="search-subtitle">Введите имя участника или его @логин, чтобы открыть профиль</p>
+
+                <div class="search-input-wrap">
+                    <input type="text" id="username-search-input" placeholder="Например: Skeezy или @admin..." autocomplete="off">
+                    <button type="button" class="clear-search-btn" id="clear-search-btn" title="Очистить">✕</button>
+                </div>
+
+                <div class="search-results-list" id="search-results-list">
+                    <p class="search-placeholder-msg">Начните вводить имя или никнейм для поиска...</p>
+                </div>
             </div>
         </section>
 
@@ -473,11 +514,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=9"></script>
+    <script src="auth.js?v=12"></script>
     <script>
         const toggleSearchBtn = document.getElementById('toggle-search-btn');
         const closeSearchPanelBtn = document.getElementById('close-search-panel');
         const userSearchBox = document.getElementById('user-search-box');
+        const searchGuestLock = document.getElementById('search-guest-lock');
+        const searchAuthorizedArea = document.getElementById('search-authorized-area');
         const searchInput = document.getElementById('username-search-input');
         const clearBtn = document.getElementById('clear-search-btn');
         const resultsList = document.getElementById('search-results-list');
@@ -494,7 +537,15 @@
             if (isHidden) {
                 userSearchBox.style.display = 'block';
                 toggleSearchBtn.classList.add('active');
-                searchInput.focus();
+
+                if (getCurrentUsername()) {
+                    searchGuestLock.style.display = 'none';
+                    searchAuthorizedArea.style.display = 'block';
+                    searchInput.focus();
+                } else {
+                    searchAuthorizedArea.style.display = 'none';
+                    searchGuestLock.style.display = 'block';
+                }
             } else {
                 userSearchBox.style.display = 'none';
                 toggleSearchBtn.classList.remove('active');
@@ -520,7 +571,7 @@
             snapshot.forEach(doc => {
                 allUsersCache.push(doc.data());
             });
-            if (searchInput.value.trim() !== '') {
+            if (getCurrentUsername() && searchInput.value.trim() !== '') {
                 renderSearchResults(searchInput.value);
             }
             renderLeaderboard();
@@ -642,6 +693,8 @@
         }
 
         function renderSearchResults(rawQuery) {
+            if (!getCurrentUsername()) return;
+
             const cleanQuery = rawQuery.trim().replace(/^@+/, '').toLowerCase();
 
             if (!cleanQuery) {
