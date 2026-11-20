@@ -11,6 +11,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
+const auth = typeof firebase.auth === 'function' ? firebase.auth() : null;
 
 // Логины и Email с полными правами администратора
 const ADMIN_USERS = ['admin'];
@@ -64,7 +65,14 @@ async function fetchUserByUsername(username) {
     return doc.exists ? doc.data() : null;
 }
 
-function logoutUser() {
+async function logoutUser() {
+    if (auth) {
+        try {
+            await auth.signOut();
+        } catch (e) {
+            console.error(e);
+        }
+    }
     localStorage.removeItem('alushta_user');
     localStorage.removeItem('alushta_email');
     window.location.href = 'index.html';
