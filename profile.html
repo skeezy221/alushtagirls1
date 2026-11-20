@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
     <style>
         .profile-card {
             position: relative;
@@ -34,6 +34,151 @@
             border-color: #dc143c;
             box-shadow: 0 0 14px rgba(220, 20, 60, 0.55);
             transform: rotate(90deg);
+        }
+
+        /* --- Маленькая табличка входящих лайков (Симпатии) --- */
+        .likes-inbox-box {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(220, 20, 60, 0.42);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .likes-inbox-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .likes-inbox-header h3 {
+            margin: 0;
+            font-size: 14.5px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .likes-count-pill {
+            background: linear-gradient(135deg, #dc143c, #ff2e55);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .likes-inbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 230px;
+            overflow-y: auto;
+        }
+
+        .like-inbox-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: rgba(12, 12, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 12px;
+            padding: 8px 10px;
+            flex-wrap: wrap;
+        }
+
+        .like-sender-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #ffffff;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .like-sender-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dc143c, #8b0000);
+            border: 1.5px solid #dc143c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .like-sender-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .like-sender-info {
+            min-width: 0;
+        }
+
+        .like-sender-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .like-sender-sub {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .like-inbox-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-like-back {
+            padding: 6px 11px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #dc143c, #ff2e55);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn-like-back:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 12px rgba(220, 20, 60, 0.65);
+        }
+
+        .btn-like-skip {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-like-skip:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
         }
 
         .shop-trigger-bar {
@@ -379,6 +524,16 @@
                 </div>
             </div>
 
+            <!-- Маленькая табличка входящих лайков (Симпатии) -->
+            <div class="likes-inbox-box" id="likes-inbox-box">
+                <div class="likes-inbox-header">
+                    <h3>♥ Входящие симпатии <span class="likes-count-pill" id="likes-inbox-count">0</span></h3>
+                </div>
+                <div class="likes-inbox-list" id="likes-inbox-list">
+                    <p style="font-size: 12.5px; color: rgba(255,255,255,0.55); margin: 0;">Пока нет новых лайков профиля.</p>
+                </div>
+            </div>
+
             <!-- Панель баланса очков и кнопка открытия мини-магазина -->
             <div class="shop-trigger-bar">
                 <div class="points-balance-info">Ваш баланс: <strong id="user-points-balance">0 ⚡</strong></div>
@@ -411,7 +566,7 @@
                 <textarea id="profile-bio" rows="3" placeholder="Расскажите о себе..."></textarea>
             </div>
 
-            <!-- Скрытая по умолчанию панель настроек (открывается по клику на ⚙️) -->
+            <!-- Скрытая по умолчанию панель настроек -->
             <div class="settings-drawer" id="settings-drawer" style="display: none;">
                 <div class="settings-drawer-header">
                     <h3>⚙️ Настройки аккаунта</h3>
@@ -468,7 +623,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=9"></script>
+    <script src="auth.js?v=10"></script>
     <script>
         let currentUsername = getCurrentUsername();
 
@@ -480,6 +635,9 @@
             const profileCard = document.getElementById('profile-card');
             const toggleSettingsBtn = document.getElementById('toggle-settings-btn');
             const settingsDrawer = document.getElementById('settings-drawer');
+
+            const likesInboxList = document.getElementById('likes-inbox-list');
+            const likesInboxCount = document.getElementById('likes-inbox-count');
 
             const toggleShopBtn = document.getElementById('toggle-shop-btn');
             const closeShopBtn = document.getElementById('close-shop-btn');
@@ -570,6 +728,111 @@
                 handleMetaEl.textContent = `@${loadedUserData.username}`;
                 pointsBalanceEl.textContent = `${loadedUserData.activityPoints || 0} ⚡`;
                 applyAvatarAndFrame(currentAvatarBase64, mainName, loadedUserData);
+            }
+
+            // Отрисовка таблички входящих лайков (Симпатии)
+            async function renderLikesInbox(userData) {
+                const likers = Array.isArray(userData.likedByUsers) ? userData.likedByUsers : [];
+                const dismissed = Array.isArray(userData.dismissedLikers) ? userData.dismissedLikers : [];
+                const pendingLikers = likers.filter(u => !dismissed.includes(u));
+
+                likesInboxCount.textContent = pendingLikers.length;
+
+                if (pendingLikers.length === 0) {
+                    likesInboxList.innerHTML = '<p style="font-size: 12.5px; color: rgba(255,255,255,0.55); margin: 0;">Пока нет новых входящих симпатий.</p>';
+                    return;
+                }
+
+                likesInboxList.innerHTML = '';
+                const meKey = currentUsername.toLowerCase();
+
+                for (const senderKey of pendingLikers) {
+                    const senderData = await fetchUserByUsername(senderKey);
+                    const senderName = senderData ? getPublicDisplayName(senderData) : senderKey;
+                    const senderFrame = senderData ? getAvatarFrameClass(senderData) : '';
+                    const senderTitle = senderData ? renderUserTitleBadge(senderData, true) : '';
+                    const alreadyLikedBack = senderData && Array.isArray(senderData.likedByUsers) && senderData.likedByUsers.includes(meKey);
+
+                    const row = document.createElement('div');
+                    row.className = 'like-inbox-row';
+
+                    const avatarHtml = senderData && senderData.avatar
+                        ? `<img src="${senderData.avatar}" alt="${senderName}">`
+                        : senderName.charAt(0).toUpperCase();
+
+                    row.innerHTML = `
+                        <a href="user.html?u=${encodeURIComponent(senderKey)}" class="like-sender-link">
+                            <div class="like-sender-avatar ${senderFrame}">${avatarHtml}</div>
+                            <div class="like-sender-info">
+                                <div class="like-sender-name">${senderName}${senderTitle}</div>
+                                <div class="like-sender-sub">${alreadyLikedBack ? '♥ Взаимная симпатия!' : 'Поставил(а) лайк вашему профилю'}</div>
+                            </div>
+                        </a>
+                        <div class="like-inbox-actions"></div>
+                    `;
+
+                    const actionsDiv = row.querySelector('.like-inbox-actions');
+
+                    if (!alreadyLikedBack) {
+                        const replyBtn = document.createElement('button');
+                        replyBtn.type = 'button';
+                        replyBtn.className = 'btn-like-back';
+                        replyBtn.textContent = '♥ Лайкнуть в ответ';
+                        replyBtn.onclick = async () => {
+                            replyBtn.disabled = true;
+                            try {
+                                const targetRef = db.collection('users').doc(senderKey);
+                                const targetSnap = await targetRef.get();
+                                if (targetSnap.exists) {
+                                    const tData = targetSnap.data();
+                                    const rewarded = Array.isArray(tData.rewardedByUsers) ? tData.rewardedByUsers : [];
+                                    const alreadyRewarded = rewarded.includes(meKey);
+
+                                    const updates = {
+                                        likedByUsers: firebase.firestore.FieldValue.arrayUnion(meKey),
+                                        profileLikes: firebase.firestore.FieldValue.increment(1),
+                                        dismissedLikers: firebase.firestore.FieldValue.arrayRemove(meKey)
+                                    };
+                                    if (!alreadyRewarded) {
+                                        updates.rewardedByUsers = firebase.firestore.FieldValue.arrayUnion(meKey);
+                                        updates.activityPoints = firebase.firestore.FieldValue.increment(5);
+                                    }
+                                    await targetRef.update(updates);
+
+                                    if (!alreadyRewarded) {
+                                        await addUserActivityPoints(currentUsername, 1);
+                                    }
+                                }
+
+                                // Убираем уведомление из списка входящих
+                                await db.collection('users').doc(meKey).update({
+                                    dismissedLikers: firebase.firestore.FieldValue.arrayUnion(senderKey)
+                                });
+
+                                if (typeof showSiteToast === 'function') {
+                                    showSiteToast(`♥ Взаимный лайк отправлен участнику <strong>${senderName}</strong>!`);
+                                }
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        };
+                        actionsDiv.appendChild(replyBtn);
+                    }
+
+                    const skipBtn = document.createElement('button');
+                    skipBtn.type = 'button';
+                    skipBtn.className = 'btn-like-skip';
+                    skipBtn.textContent = 'Пропустить';
+                    skipBtn.onclick = async () => {
+                        skipBtn.disabled = true;
+                        await db.collection('users').doc(meKey).update({
+                            dismissedLikers: firebase.firestore.FieldValue.arrayUnion(senderKey)
+                        });
+                    };
+                    actionsDiv.appendChild(skipBtn);
+
+                    likesInboxList.appendChild(row);
+                }
             }
 
             function renderShopItems() {
@@ -669,8 +932,9 @@
                 });
             }
 
-            async function loadProfile() {
-                const doc = await db.collection('users').doc(currentUsername.toLowerCase()).get();
+            let isFirstSnapshot = true;
+
+            db.collection('users').doc(currentUsername.toLowerCase()).onSnapshot(doc => {
                 if (!doc.exists) {
                     logoutUser();
                     return;
@@ -681,24 +945,27 @@
 
                 emailEl.textContent = 'Email: ' + loadedUserData.email;
                 dateEl.textContent = 'На сайте с: ' + (loadedUserData.regDate || 'недавно');
-                bioInput.value = loadedUserData.bio || '';
                 viewPublicLink.href = `user.html?u=${encodeURIComponent(loadedUserData.username)}`;
 
-                editUsernameInput.value = loadedUserData.username || '';
-                editDisplayNameInput.value = loadedUserData.displayName || '';
-                editEmailInput.value = loadedUserData.email || '';
-                editPasswordInput.value = '';
+                if (isFirstSnapshot) {
+                    bioInput.value = loadedUserData.bio || '';
+                    editUsernameInput.value = loadedUserData.username || '';
+                    editDisplayNameInput.value = loadedUserData.displayName || '';
+                    editEmailInput.value = loadedUserData.email || '';
+                    editPasswordInput.value = '';
 
-                EXTRA_PROFILE_FIELDS.forEach(field => {
-                    const el = document.getElementById(`extra-${field.key}`);
-                    if (el) el.value = loadedUserData[field.key] || '';
-                });
+                    EXTRA_PROFILE_FIELDS.forEach(field => {
+                        const el = document.getElementById(`extra-${field.key}`);
+                        if (el) el.value = loadedUserData[field.key] || '';
+                    });
 
-                currentAvatarBase64 = loadedUserData.avatar || '';
+                    currentAvatarBase64 = loadedUserData.avatar || '';
+                    isFirstSnapshot = false;
+                }
+
                 updateProfileHeaderUI();
-            }
-
-            loadProfile();
+                renderLikesInbox(loadedUserData);
+            });
 
             avatarInput.addEventListener('change', function(event) {
                 const file = event.target.files[0];
