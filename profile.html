@@ -6,48 +6,80 @@
     <title>Профиль — Знакомства Алушта Girls</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .profile-editor-card {
-            max-width: 560px;
-            margin: 22px auto 35px auto;
-            background: rgba(12, 12, 18, 0.9);
-            backdrop-filter: blur(12px);
+        .profile-card {
+            position: relative;
+        }
+
+        /* Кнопка-шестерёнка в правом верхнем углу профиля */
+        .settings-gear-btn {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(220, 20, 60, 0.45);
-            border-radius: 22px;
-            padding: 26px 24px;
-            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.85), 0 0 22px rgba(220, 20, 60, 0.2);
+            color: #ffffff;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.35s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .settings-gear-btn:hover,
+        .settings-gear-btn.active {
+            background: rgba(220, 20, 60, 0.25);
+            border-color: #dc143c;
+            box-shadow: 0 0 14px rgba(220, 20, 60, 0.55);
+            transform: rotate(90deg);
+        }
+
+        /* Раскрывающаяся панель настроек по шестерёнке */
+        .settings-drawer {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(220, 20, 60, 0.35);
             text-align: left;
-            box-sizing: border-box;
+            animation: slideDownSettings 0.25s ease;
         }
 
-        .editor-section {
-            padding-bottom: 18px;
-            margin-bottom: 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        @keyframes slideDownSettings {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .editor-section:last-of-type {
-            border-bottom: none;
-            margin-bottom: 10px;
-            padding-bottom: 0;
+        .settings-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
         }
 
-        .editor-section-title {
-            font-size: 13px;
+        .settings-drawer-header h3 {
+            margin: 0;
+            font-size: 15px;
             text-transform: uppercase;
-            letter-spacing: 0.9px;
+            letter-spacing: 0.7px;
             color: #ff6b81;
-            font-weight: 700;
-            margin: 0 0 14px 0;
         }
 
-        .editor-grid-2 {
+        .settings-grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
         }
 
         @media (max-width: 520px) {
-            .editor-grid-2 {
+            .settings-grid-2 {
                 grid-template-columns: 1fr;
             }
         }
@@ -73,7 +105,7 @@
 
         .field-hint {
             font-size: 11.5px;
-            color: rgba(255, 255, 255, 0.52);
+            color: rgba(255, 255, 255, 0.5);
             margin-top: 4px;
         }
 
@@ -166,56 +198,58 @@
     </header>
 
     <main>
-        <h1>Редактирование профиля</h1>
+        <h1>Личный кабинет</h1>
 
-        <section class="profile-editor-card" id="profile-card" style="display: none;">
-            <!-- Шапка профиля с аватаром -->
-            <div class="profile-header-info editor-section">
+        <section class="profile-card" id="profile-card" style="display: none;">
+            <!-- Кнопка-шестерёнка для открытия настроек аккаунта -->
+            <button type="button" class="settings-gear-btn" id="toggle-settings-btn" title="Настройки аккаунта">⚙️</button>
+
+            <div class="profile-header-info">
                 <div class="avatar-upload-container">
                     <div class="profile-avatar" id="profile-avatar">?</div>
-                    <label for="avatar-input" class="avatar-upload-btn" title="Сменить фото">📷 Фото</label>
+                    <label for="avatar-input" class="avatar-upload-btn" title="Загрузить фото">📷 Фото</label>
                     <input type="file" id="avatar-input" accept="image/*" style="display: none;">
                 </div>
                 <div class="profile-details">
                     <h2 id="profile-username">@user</h2>
+                    <p class="profile-meta" id="profile-email">Email: ...</p>
                     <p class="profile-meta" id="profile-date">На сайте с: ...</p>
-                    <a id="view-public-link" href="#" style="display: inline-block; margin-top: 6px; font-size: 12.5px; color: #ff6b81; text-decoration: none;">👁 Посмотреть как видят другие →</a>
                 </div>
             </div>
 
-            <!-- Секция 1: Основные данные аккаунта -->
-            <div class="editor-section">
-                <h3 class="editor-section-title">Основные данные</h3>
-                <div class="editor-grid-2">
+            <div class="form-group">
+                <label for="profile-bio">Статус / О себе</label>
+                <textarea id="profile-bio" rows="3" placeholder="Расскажите о себе..."></textarea>
+            </div>
+
+            <!-- Скрытая по умолчанию панель настроек (открывается по клику на ⚙️) -->
+            <div class="settings-drawer" id="settings-drawer" style="display: none;">
+                <div class="settings-drawer-header">
+                    <h3>⚙️ Настройки аккаунта</h3>
+                    <a id="view-public-link" href="#" style="font-size: 12.5px; color: #ff6b81; text-decoration: none;">👁 Публичный вид →</a>
+                </div>
+
+                <div class="settings-grid-2">
                     <div class="form-group">
                         <label for="edit-username">Имя пользователя (логин)</label>
                         <div class="username-input-wrap">
                             <span class="username-prefix">@</span>
                             <input type="text" id="edit-username" minlength="3" maxlength="20" placeholder="username">
                         </div>
-                        <div class="field-hint">Латиница, цифры или _ (3–20 символов)</div>
+                        <div class="field-hint">Латиница, цифры или _ (3–20)</div>
                     </div>
 
                     <div class="form-group">
                         <label for="edit-display-name">Отображаемое имя</label>
                         <input type="text" id="edit-display-name" maxlength="30" placeholder="Например: Максим">
-                        <div class="field-hint">Показывается в профиле рядом с ником</div>
+                        <div class="field-hint">Имя рядом с ником</div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="edit-bio">Статус / О себе</label>
-                    <textarea id="edit-bio" rows="3" maxlength="300" placeholder="Расскажите о себе, увлечениях или оставьте контакт..."></textarea>
-                </div>
+                <!-- Контейнер для будущих расширяемых полей -->
+                <div id="extra-profile-fields" class="settings-grid-2"></div>
 
-                <!-- Контейнер для будущих расширяемых полей профиля -->
-                <div id="extra-profile-fields" class="editor-grid-2"></div>
-            </div>
-
-            <!-- Секция 2: Контакты и безопасность -->
-            <div class="editor-section">
-                <h3 class="editor-section-title">Почта и безопасность</h3>
-                <div class="editor-grid-2">
+                <div class="settings-grid-2">
                     <div class="form-group">
                         <label for="edit-email">Email</label>
                         <input type="email" id="edit-email" placeholder="example@mail.ru">
@@ -223,7 +257,7 @@
 
                     <div class="form-group">
                         <label for="edit-password">Новый пароль</label>
-                        <input type="password" id="edit-password" minlength="4" placeholder="Оставьте пустым, если не меняете">
+                        <input type="password" id="edit-password" minlength="4" placeholder="Не менять — оставить пустым">
                     </div>
                 </div>
             </div>
@@ -258,29 +292,31 @@
         let currentUsername = getCurrentUsername();
 
         // =========================================================================
-        // КОНСТРУКТОР БУДУЩИХ ПОЛЕЙ ПРОФИЛЯ:
-        // Чтобы в будущем добавить новое поле (например, Telegram, Город, Возраст),
-        // просто добавь объект в этот массив — оно само появится в редакторе и БД.
+        // КОНСТРУКТОР БУДУЩИХ ПОЛЕЙ В НАСТРОЙКАХ (по шестерёнке):
+        // Добавь сюда объект — поле само появится в шестерёнке и сохранится в БД.
         // =========================================================================
         const EXTRA_PROFILE_FIELDS = [
-            // Пример на будущее (раскомментируй или добавь свои):
             // { key: 'telegram', label: 'Telegram', type: 'text', placeholder: '@username', maxLength: 40 },
-            // { key: 'city', label: 'Город / Район', type: 'text', placeholder: 'Алушта', maxLength: 40 }
+            // { key: 'city', label: 'Город', type: 'text', placeholder: 'Алушта', maxLength: 40 }
         ];
 
         if (!currentUsername) {
             window.location.href = 'login.html';
         } else {
             const profileCard = document.getElementById('profile-card');
+            const toggleSettingsBtn = document.getElementById('toggle-settings-btn');
+            const settingsDrawer = document.getElementById('settings-drawer');
+
             const avatarBox = document.getElementById('profile-avatar');
             const avatarInput = document.getElementById('avatar-input');
-            const usernameHeaderEl = document.getElementById('profile-username');
+            const usernameEl = document.getElementById('profile-username');
+            const emailEl = document.getElementById('profile-email');
             const dateEl = document.getElementById('profile-date');
+            const bioInput = document.getElementById('profile-bio');
             const viewPublicLink = document.getElementById('view-public-link');
 
             const editUsernameInput = document.getElementById('edit-username');
             const editDisplayNameInput = document.getElementById('edit-display-name');
-            const editBioInput = document.getElementById('edit-bio');
             const editEmailInput = document.getElementById('edit-email');
             const editPasswordInput = document.getElementById('edit-password');
             const extraFieldsContainer = document.getElementById('extra-profile-fields');
@@ -293,7 +329,14 @@
             let loadedUserData = null;
             let currentAvatarBase64 = '';
 
-            // Генерируем дополнительные поля из EXTRA_PROFILE_FIELDS (если заданы)
+            // Открытие / закрытие настроек по шестерёнке
+            toggleSettingsBtn.addEventListener('click', () => {
+                const isClosed = settingsDrawer.style.display === 'none';
+                settingsDrawer.style.display = isClosed ? 'block' : 'none';
+                toggleSettingsBtn.classList.toggle('active', isClosed);
+            });
+
+            // Создаём дополнительные поля из EXTRA_PROFILE_FIELDS (если заданы)
             EXTRA_PROFILE_FIELDS.forEach(field => {
                 const group = document.createElement('div');
                 group.className = 'form-group';
@@ -312,10 +355,8 @@
                 }
             }
 
-            async function loadProfileEditor() {
-                const docRef = db.collection('users').doc(currentUsername.toLowerCase());
-                const doc = await docRef.get();
-
+            async function loadProfile() {
+                const doc = await db.collection('users').doc(currentUsername.toLowerCase()).get();
                 if (!doc.exists) {
                     logoutUser();
                     return;
@@ -324,17 +365,17 @@
                 loadedUserData = doc.data();
                 profileCard.style.display = 'block';
 
-                const displayTitle = loadedUserData.displayName
+                usernameEl.textContent = loadedUserData.displayName
                     ? `${loadedUserData.displayName} (@${loadedUserData.username})`
                     : `@${loadedUserData.username}`;
-
-                usernameHeaderEl.textContent = displayTitle;
+                emailEl.textContent = 'Email: ' + loadedUserData.email;
                 dateEl.textContent = 'На сайте с: ' + (loadedUserData.regDate || 'недавно');
+                bioInput.value = loadedUserData.bio || '';
                 viewPublicLink.href = `user.html?u=${encodeURIComponent(loadedUserData.username)}`;
 
+                // Заполняем поля внутри шестерёнки
                 editUsernameInput.value = loadedUserData.username || '';
                 editDisplayNameInput.value = loadedUserData.displayName || '';
-                editBioInput.value = loadedUserData.bio || '';
                 editEmailInput.value = loadedUserData.email || '';
                 editPasswordInput.value = '';
 
@@ -347,9 +388,8 @@
                 renderAvatar(currentAvatarBase64, loadedUserData.username);
             }
 
-            loadProfileEditor();
+            loadProfile();
 
-            // Загрузка и обрезка нового аватара
             avatarInput.addEventListener('change', function(event) {
                 const file = event.target.files[0];
                 if (!file) return;
@@ -381,29 +421,34 @@
                 reader.readAsDataURL(file);
             });
 
-            // Сохранение всех изменений профиля (включая смену username)
             saveBtn.addEventListener('click', async () => {
                 if (!loadedUserData) return;
 
                 const newUsername = editUsernameInput.value.trim().replace(/^@+/, '');
                 const newDisplayName = editDisplayNameInput.value.trim();
-                const newBio = editBioInput.value.trim();
+                const newBio = bioInput.value.trim();
                 const newEmail = editEmailInput.value.trim();
                 const newPassword = editPasswordInput.value.trim();
 
                 if (!/^[a-zA-Z0-9_]{3,20}$/.test(newUsername)) {
+                    settingsDrawer.style.display = 'block';
+                    toggleSettingsBtn.classList.add('active');
                     messageBox.textContent = 'Логин должен содержать 3–20 символов (латиница, цифры или _).';
                     messageBox.className = 'form-message error';
                     return;
                 }
 
                 if (!newEmail || !newEmail.includes('@')) {
+                    settingsDrawer.style.display = 'block';
+                    toggleSettingsBtn.classList.add('active');
                     messageBox.textContent = 'Введите корректный Email.';
                     messageBox.className = 'form-message error';
                     return;
                 }
 
                 if (newPassword && newPassword.length < 4) {
+                    settingsDrawer.style.display = 'block';
+                    toggleSettingsBtn.classList.add('active');
                     messageBox.textContent = 'Новый пароль должен быть не короче 4 символов.';
                     messageBox.className = 'form-message error';
                     return;
@@ -427,14 +472,12 @@
                         password: newPassword ? newPassword : loadedUserData.password
                     };
 
-                    // Сохраняем значения всех дополнительных полей
                     EXTRA_PROFILE_FIELDS.forEach(field => {
                         const el = document.getElementById(`extra-${field.key}`);
                         if (el) updatedData[field.key] = el.value.trim();
                     });
 
                     if (oldId !== newId) {
-                        // Проверяем, свободен ли новый логин
                         const targetDoc = await db.collection('users').doc(newId).get();
                         if (targetDoc.exists) {
                             messageBox.textContent = `Логин @${newUsername} уже занят другим пользователем.`;
@@ -444,7 +487,6 @@
                             return;
                         }
 
-                        // Переносим профиль на новый ID и удаляем старый документ
                         await db.collection('users').doc(newId).set(updatedData);
                         await db.collection('users').doc(oldId).delete();
 
@@ -458,9 +500,10 @@
                     loadedUserData = updatedData;
                     editPasswordInput.value = '';
 
-                    usernameHeaderEl.textContent = newDisplayName
+                    usernameEl.textContent = newDisplayName
                         ? `${newDisplayName} (@${newUsername})`
                         : `@${newUsername}`;
+                    emailEl.textContent = 'Email: ' + newEmail;
                     viewPublicLink.href = `user.html?u=${encodeURIComponent(newUsername)}`;
 
                     // Обновляем шапку сайта
@@ -475,9 +518,9 @@
                         topLink.innerHTML = `${avatarHtml} ${newUsername}${badgeHtml}`;
                     }
 
-                    messageBox.textContent = 'Все изменения профиля сохранены!';
+                    messageBox.textContent = 'Профиль обновлён в облаке!';
                     messageBox.className = 'form-message success';
-                    setTimeout(() => { messageBox.textContent = ''; }, 3000);
+                    setTimeout(() => { messageBox.textContent = ''; }, 2500);
                 } catch (err) {
                     console.error(err);
                     messageBox.textContent = 'Ошибка при сохранении профиля.';
