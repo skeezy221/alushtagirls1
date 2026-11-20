@@ -12,8 +12,9 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// Список логинов с полными правами администратора (в нижнем регистре)
+// Логины и Email с полными правами администратора
 const ADMIN_USERS = ['admin'];
+const ADMIN_EMAILS = ['weekmaga@gmail.com'];
 
 // Автоматически устанавливаем иконку вкладки (favicon) с логотипом skeezy
 (function setSiteFavicon() {
@@ -52,8 +53,9 @@ function getCurrentUsername() {
 }
 
 function isAdminUser() {
-    const user = getCurrentUsername();
-    return Boolean(user && ADMIN_USERS.includes(user.trim().toLowerCase()));
+    const user = (getCurrentUsername() || '').trim().toLowerCase();
+    const email = (localStorage.getItem('alushta_email') || '').trim().toLowerCase();
+    return Boolean((user && ADMIN_USERS.includes(user)) || (email && ADMIN_EMAILS.includes(email)));
 }
 
 async function fetchUserByUsername(username) {
@@ -64,6 +66,7 @@ async function fetchUserByUsername(username) {
 
 function logoutUser() {
     localStorage.removeItem('alushta_user');
+    localStorage.removeItem('alushta_email');
     window.location.href = 'index.html';
 }
 
@@ -145,13 +148,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         userPanel.className = 'user-top-bar';
 
         const currentUsername = getCurrentUsername();
-        const adminBadge = isAdminUser()
-            ? '<span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px;">ADMIN</span>'
-            : '';
 
         if (currentUsername) {
+            const initialBadge = isAdminUser()
+                ? '<span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px;">ADMIN</span>'
+                : '';
+
             userPanel.innerHTML = `
-                <a href="profile.html" class="profile-link">👤 ${currentUsername}${adminBadge}</a>
+                <a href="profile.html" class="profile-link">👤 ${currentUsername}${initialBadge}</a>
                 <button type="button" class="logout-btn" onclick="logoutUser()">Выйти</button>
             `;
             header.appendChild(userPanel);
@@ -159,10 +163,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const userData = await fetchUserByUsername(currentUsername);
                 if (userData) {
+                    if (userData.email) {
+                        localStorage.setItem('alushta_email', userData.email.toLowerCase());
+                    }
+                    const refreshedBadge = isAdminUser()
+                        ? '<span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px;">ADMIN</span>'
+                        : '';
                     const avatarHtml = userData.avatar 
                         ? `<img src="${userData.avatar}" alt="avatar" class="top-bar-avatar">` 
                         : '👤';
-                    userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${userData.username}${adminBadge}`;
+                    userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${userData.username}${refreshedBadge}`;
                 }
             } catch (err) {
                 console.error('Ошибка загрузки профиля в шапке:', err);
