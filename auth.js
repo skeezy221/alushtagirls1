@@ -120,9 +120,69 @@ const SHOP_CATALOG = {
             0% { box-shadow: 0 0 12px #dc143c, 0 0 22px #ff2e55; }
             100% { box-shadow: 0 0 22px #ff758f, 0 0 36px #f5b041; }
         }
+
+        /* Всплывающие уведомления (Toast) */
+        .site-toast-container {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 340px;
+            pointer-events: none;
+        }
+        .site-toast-item {
+            pointer-events: auto;
+            background: rgba(14, 14, 22, 0.96);
+            backdrop-filter: blur(12px);
+            border: 1px solid #dc143c;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85), 0 0 18px rgba(220, 20, 60, 0.45);
+            color: #ffffff;
+            padding: 13px 16px;
+            border-radius: 14px;
+            font-size: 13.5px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastSlideIn 0.28s ease;
+            cursor: pointer;
+        }
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateY(14px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
     `;
     document.head.appendChild(style);
 })();
+
+// Глобальная функция показа красивого всплывающего уведомления
+function showSiteToast(message, href = '') {
+    let container = document.getElementById('site-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'site-toast-container';
+        container.className = 'site-toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'site-toast-item';
+    toast.innerHTML = `<span style="font-size: 18px;">♥</span><div>${message}</div>`;
+    if (href) {
+        toast.onclick = () => { window.location.href = href; };
+    }
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 260);
+    }, 4200);
+}
 
 // Возвращает основное имя пользователя (если не заполнено — возвращает username)
 function getPublicDisplayName(userData) {
@@ -233,6 +293,37 @@ function formatTimeSpent(totalMinutes) {
             console.error('Ошибка обновления времени на сайте:', e);
         }
     }, 60000);
+})();
+
+// Фоновый слушатель входящих лайков для авторизованного пользователя
+(function listenIncomingLikes() {
+    const me = getCurrentUsername();
+    if (!me) return;
+    let knownLikers = null;
+
+    db.collection('users').doc(me.toLowerCase()).onSnapshot(async doc => {
+        if (!doc.exists) return;
+        const data = doc.data();
+        const currentLikers = Array.isArray(data.likedByUsers) ? data.likedByUsers : [];
+
+        if (knownLikers === null) {
+            knownLikers = new Set(currentLikers);
+            return;
+        }
+
+        for (const liker of currentLikers) {
+            if (!knownLikers.has(liker)) {
+                knownLikers.add(liker);
+                const likerProfile = await fetchUserByUsername(liker);
+                const senderName = likerProfile ? getPublicDisplayName(likerProfile) : liker;
+                showSiteToast(
+                    `<strong>${senderName}</strong> лайкнул(а) ваш профиль! Нажмите, чтобы ответить.`,
+                    'profile.html'
+                );
+            }
+        }
+        knownLikers = new Set(currentLikers);
+    });
 })();
 
 async function logoutUser() {
