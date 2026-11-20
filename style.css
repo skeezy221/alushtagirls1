@@ -817,3 +817,164 @@ nav a:hover {
 .nav-label {
     text-align: left;
 }
+/* --- Раздел анкет Girls From Alushta --- */
+.dating-top-actions {
+    margin: 25px 0;
+    text-align: center;
+}
+
+.dating-form {
+    max-width: 520px;
+    margin: 0 auto 40px auto;
+    padding: 25px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(220, 20, 60, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(220, 20, 60, 0.25);
+    text-align: left;
+}
+
+.dating-form h2 {
+    margin-top: 0;
+    color: #FFFFFF;
+    text-shadow: 0 0 10px #dc143c;
+}
+
+.form-hint {
+    font-size: 13px;
+    color: #cccccc;
+    margin-bottom: 18px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-row .age-group {
+    max-width: 110px;
+}
+
+.photo-upload-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.photo-select-btn {
+    cursor: pointer;
+    display: inline-block;
+    padding: 8px 14px;
+    font-size: 14px;
+}
+
+.photo-file-name {
+    font-size: 13px;
+    color: #bbbbbb;
+}
+
+.photo-preview-wrap {
+    margin-top: 12px;
+    text-align: center;
+}
+
+.photo-preview-wrap img {
+    max-width: 200px;
+    max-height: 220px;
+    border-radius: 10px;
+    border: 2px solid #dc143c;
+    box-shadow: 0 0 15px rgba(220, 20, 60, 0.5);
+    object-fit: cover;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* Сетка карточек с анкетами */
+.dating-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 24px;
+    max-width: 960px;
+    margin: 30px auto;
+    text-align: left;
+}
+
+.dating-card {
+    background-color: rgba(0, 0, 0, 0.78);
+    border: 1px solid rgba(220, 20, 60, 0.45);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.dating-card:hover {
+    transform: translateY(-5px);
+    border-color: #dc143c;
+    box-shadow: 0 0 22px rgba(220, 20, 60, 0.55);
+}
+
+.dating-photo-box {
+    width: 100%;
+    height: 290px;
+    background-color: #111;
+    overflow: hidden;
+}
+
+.dating-photo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.dating-card-content {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.dating-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.dating-title-row h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #FFFFFF;
+    text-shadow: 0 0 8px rgba(220, 20, 60, 0.7);
+}
+
+.dating-bio {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #e6e6e6;
+    margin: 0 0 16px 0;
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.dating-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 12px;
+}
