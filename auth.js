@@ -12,6 +12,34 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
+// Автоматически устанавливаем иконку вкладки (favicon) с рубиновым сердцем и буквой S
+(function setSiteFavicon() {
+    const svgFavicon = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+            <defs>
+                <linearGradient id="rubyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff2e55"/>
+                    <stop offset="100%" stop-color="#b00d2d"/>
+                </linearGradient>
+            </defs>
+            <rect width="64" height="64" rx="16" fill="#0d0d12"/>
+            <rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="#dc143c" stroke-width="2.5"/>
+            <path d="M32 54 C32 54 10 40 10 24.5 C10 17 15.8 11.5 23 11.5 C27.2 11.5 30.5 13.6 32 16.5 C33.5 13.6 36.8 11.5 41 11.5 C48.2 11.5 54 17 54 24.5 C54 40 32 54 32 54 Z" fill="url(#rubyGrad)"/>
+            <text x="32" y="39" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-weight="900" font-size="25">S</text>
+        </svg>
+    `.trim();
+    const encoded = 'data:image/svg+xml,' + encodeURIComponent(svgFavicon);
+
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+    }
+    link.type = 'image/svg+xml';
+    link.href = encoded;
+})();
+
 function getCurrentUsername() {
     return localStorage.getItem('alushta_user');
 }
