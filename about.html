@@ -14,31 +14,34 @@
 
     <main>
         <h1>Girls From Alushta</h1>
-        <p>Анкеты девушек Алушты для общения, прогулок и новых знакомств.</p>
+        <p class="subtitle-muted">Свайпай вправо, чтобы выразить симпатию, или влево, чтобы смотреть дальше.</p>
 
-        <!-- Кнопка для авторизованных пользователей -->
+        <!-- Панель для авторизованных пользователей -->
         <div class="dating-top-actions" id="auth-dating-actions" style="display: none;">
-            <button type="button" class="btn-submit" id="toggle-form-btn">+ Разместить свою анкету</button>
+            <button type="button" class="btn-submit btn-pill" id="toggle-form-btn">+ Разместить анкету</button>
         </div>
 
-        <!-- Плашка для неавторизованных гостей -->
-        <div class="guest-notice" id="dating-guest-notice" style="display: none;">
-            <p>Размещать анкеты и ставить симпатии могут только зарегистрированные участники.</p>
+        <!-- Компактная плашка для гостей -->
+        <div class="guest-notice compact-notice" id="dating-guest-notice" style="display: none;">
+            <p>Для размещения анкеты и сохранения симпатий войдите в аккаунт.</p>
             <div class="guest-notice-actions">
-                <a href="login.html" class="btn-submit">Войти в аккаунт</a>
-                <a href="registr.html" class="btn-outline">Регистрация</a>
+                <a href="login.html" class="btn-submit btn-sm">Войти</a>
+                <a href="registr.html" class="btn-outline btn-sm">Регистрация</a>
             </div>
         </div>
 
-        <!-- Форма создания анкеты (доступна только после входа, но поля независимы от профиля) -->
+        <!-- Аккуратная форма создания анкеты -->
         <form class="dating-form" id="dating-form" style="display: none;">
-            <h2>Новая анкета</h2>
-            <p class="form-hint">Данные анкеты не обязаны совпадать с вашим профилем — вы можете указать любое имя и загрузить отдельное фото.</p>
+            <div class="dating-form-header">
+                <h2>Новая анкета</h2>
+                <button type="button" class="btn-close-form" id="cancel-form-btn" title="Закрыть">✕</button>
+            </div>
+            <p class="form-hint">Анкета независима от профиля — укажите любое имя и отдельное фото.</p>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="girl-name">Имя в анкете *</label>
-                    <input type="text" id="girl-name" placeholder="Например: Алина" maxlength="30" required>
+                    <label for="girl-name">Имя *</label>
+                    <input type="text" id="girl-name" placeholder="Алина" maxlength="30" required>
                 </div>
 
                 <div class="form-group age-group">
@@ -48,11 +51,11 @@
             </div>
 
             <div class="form-group">
-                <label for="girl-photo">Фотография *</label>
+                <label>Фотография *</label>
                 <div class="photo-upload-box">
                     <label for="girl-photo" class="btn-outline photo-select-btn">📷 Выбрать фото</label>
                     <input type="file" id="girl-photo" accept="image/*" style="display: none;">
-                    <span id="photo-file-name" class="photo-file-name">Файл не выбран</span>
+                    <span id="photo-file-name" class="photo-file-name">Не выбрано</span>
                 </div>
                 <div id="photo-preview-wrap" class="photo-preview-wrap" style="display: none;">
                     <img id="photo-preview" src="" alt="Предпросмотр">
@@ -60,21 +63,28 @@
             </div>
 
             <div class="form-group">
-                <label for="girl-bio">О себе (интересы, кого ищете, контакт для связи) *</label>
-                <textarea id="girl-bio" rows="4" placeholder="Например: Люблю вечерние прогулки по набережной, кофе и спонтанные поездки. Пишите в ТГ: @..." maxlength="500" required></textarea>
+                <label for="girl-bio">О себе и контакт для связи *</label>
+                <textarea id="girl-bio" rows="3" placeholder="Люблю вечерние прогулки по набережной и вкусный кофе. ТГ: @..." maxlength="400" required></textarea>
             </div>
 
             <div id="dating-message" class="form-message"></div>
 
-            <div class="form-buttons">
-                <button type="submit" class="btn-submit" id="submit-card-btn">Опубликовать анкету</button>
-                <button type="button" class="btn-outline" id="cancel-form-btn">Отмена</button>
-            </div>
+            <button type="submit" class="btn-submit btn-full" id="submit-card-btn">Опубликовать анкету</button>
         </form>
 
-        <!-- Сетка анкет из облака -->
-        <section class="dating-grid" id="dating-grid">
-            <p class="empty-posts">Загрузка анкет...</p>
+        <!-- Свайп-колода анкет -->
+        <section class="swipe-stage" id="swipe-stage">
+            <div class="swipe-deck" id="swipe-deck">
+                <div class="swipe-empty-state">Загрузка анкет...</div>
+            </div>
+
+            <!-- Нижние кнопки управления свайпом -->
+            <div class="swipe-controls" id="swipe-controls" style="display: none;">
+                <button type="button" class="swipe-btn btn-rewind" id="btn-rewind" title="Вернуть предыдущую">↺</button>
+                <button type="button" class="swipe-btn btn-pass" id="btn-pass" title="Пропустить (влево)">✕</button>
+                <button type="button" class="swipe-btn btn-like-swipe" id="btn-like-swipe" title="Симпатия (вправо)">♥</button>
+            </div>
+            <div class="swipe-counter" id="swipe-counter"></div>
         </section>
 
         <nav>
@@ -102,18 +112,25 @@
         const photoPreview = document.getElementById('photo-preview');
         const datingMessage = document.getElementById('dating-message');
         const submitCardBtn = document.getElementById('submit-card-btn');
-        const datingGrid = document.getElementById('dating-grid');
+
+        const swipeDeck = document.getElementById('swipe-deck');
+        const swipeControls = document.getElementById('swipe-controls');
+        const swipeCounter = document.getElementById('swipe-counter');
+        const btnPass = document.getElementById('btn-pass');
+        const btnLikeSwipe = document.getElementById('btn-like-swipe');
+        const btnRewind = document.getElementById('btn-rewind');
 
         let compressedPhotoBase64 = '';
+        let allProfiles = [];
+        let currentIndex = 0;
+        let isAnimating = false;
 
-        // Показываем кнопку создания анкеты только вошедшим пользователям
         if (currentUsername) {
             authActions.style.display = 'block';
         } else {
             guestNotice.style.display = 'block';
         }
 
-        // Открытие и закрытие формы
         toggleFormBtn.addEventListener('click', () => {
             if (!currentUsername) return;
             datingForm.style.display = 'block';
@@ -126,11 +143,11 @@
             datingForm.reset();
             compressedPhotoBase64 = '';
             photoPreviewWrap.style.display = 'none';
-            photoFileName.textContent = 'Файл не выбран';
+            photoFileName.textContent = 'Не выбрано';
             datingMessage.textContent = '';
         });
 
-        // Обработка и сжатие выбранного фото
+        // Сжатие фото перед загрузкой
         photoInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -142,7 +159,7 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const maxDim = 600;
+                    const maxDim = 650;
                     let width = img.width;
                     let height = img.height;
 
@@ -163,7 +180,7 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    compressedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.78);
+                    compressedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
                     photoPreview.src = compressedPhotoBase64;
                     photoPreviewWrap.style.display = 'block';
                 };
@@ -172,21 +189,17 @@
             reader.readAsDataURL(file);
         });
 
-        // Отправка анкеты в Firestore
+        // Публикация новой анкеты
         datingForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-
-            if (!currentUsername) {
-                alert('Для публикации анкеты необходимо войти в аккаунт!');
-                return;
-            }
+            if (!currentUsername) return;
 
             const name = document.getElementById('girl-name').value.trim();
             const age = parseInt(document.getElementById('girl-age').value, 10);
             const bio = document.getElementById('girl-bio').value.trim();
 
             if (!compressedPhotoBase64) {
-                datingMessage.textContent = 'Пожалуйста, выберите фотографию для анкеты!';
+                datingMessage.textContent = 'Выберите фотографию для анкеты!';
                 datingMessage.className = 'form-message error';
                 return;
             }
@@ -204,7 +217,7 @@
                     photo: compressedPhotoBase64,
                     bio: bio,
                     likedBy: [],
-                    ownerAccount: currentUsername.toLowerCase(), // скрытая привязка только для права удаления
+                    ownerAccount: currentUsername.toLowerCase(),
                     date: dateStr,
                     createdAt: Date.now()
                 });
@@ -212,12 +225,13 @@
                 datingForm.reset();
                 compressedPhotoBase64 = '';
                 photoPreviewWrap.style.display = 'none';
-                photoFileName.textContent = 'Файл не выбран';
+                photoFileName.textContent = 'Не выбрано';
                 datingForm.style.display = 'none';
                 toggleFormBtn.style.display = 'inline-block';
+                currentIndex = 0;
             } catch (err) {
                 console.error(err);
-                datingMessage.textContent = 'Ошибка при публикации. Попробуйте выбрать фото меньшего размера.';
+                datingMessage.textContent = 'Ошибка публикации. Попробуйте другое фото.';
                 datingMessage.className = 'form-message error';
             } finally {
                 submitCardBtn.disabled = false;
@@ -225,98 +239,246 @@
             }
         });
 
-        // Отображение ленты анкет в реальном времени
-        db.collection('girls_profiles').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            datingGrid.innerHTML = '';
+        // Запись лайка в Firebase при свайпе вправо
+        async function registerLike(cardData) {
+            if (!currentUsername) return;
+            const likedBy = Array.isArray(cardData.likedBy) ? cardData.likedBy : [];
+            if (!likedBy.includes(currentUsername)) {
+                try {
+                    await db.collection('girls_profiles').doc(cardData.id).update({
+                        likedBy: firebase.firestore.FieldValue.arrayUnion(currentUsername)
+                    });
+                } catch (e) {
+                    console.error('Ошибка лайка:', e);
+                }
+            }
+        }
 
-            if (snapshot.empty) {
-                datingGrid.innerHTML = '<p class="empty-posts">Пока нет ни одной анкеты. Станьте первой!</p>';
+        // Создание DOM-элемента одной свайп-карточки
+        function createSwipeCardElement(cardData, isTopCard) {
+            const likedBy = Array.isArray(cardData.likedBy) ? cardData.likedBy : [];
+            const isLiked = currentUsername && likedBy.includes(currentUsername);
+            const isOwner = currentUsername && cardData.ownerAccount === currentUsername.toLowerCase();
+
+            const card = document.createElement('article');
+            card.className = 'swipe-card' + (isTopCard ? ' is-top' : ' is-next');
+
+            card.innerHTML = `
+                <div class="swipe-stamp stamp-like">СИМПАТИЯ ♥</div>
+                <div class="swipe-stamp stamp-pass">ДАЛЬШЕ ✕</div>
+                <div class="swipe-card-media">
+                    <img src="${cardData.photo}" alt="${cardData.name}" draggable="false">
+                    <div class="swipe-card-gradient"></div>
+                    <div class="swipe-card-badges">
+                        <span class="likes-pill ${isLiked ? 'active' : ''}">♥ ${likedBy.length}</span>
+                        ${isOwner ? '<button type="button" class="card-del-icon" title="Удалить свою анкету">🗑</button>' : ''}
+                    </div>
+                    <div class="swipe-card-headline">
+                        <h2>${cardData.name}, <span>${cardData.age}</span></h2>
+                        <span class="swipe-card-date">${cardData.date || ''}</span>
+                    </div>
+                </div>
+                <div class="swipe-card-body">
+                    <p>${cardData.bio}</p>
+                </div>
+            `;
+
+            if (isOwner) {
+                const delBtn = card.querySelector('.card-del-icon');
+                delBtn.addEventListener('pointerdown', e => e.stopPropagation());
+                delBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm('Удалить эту анкету?')) {
+                        await db.collection('girls_profiles').doc(cardData.id).delete();
+                    }
+                });
+            }
+
+            if (isTopCard) {
+                attachSwipeGestures(card, cardData);
+            }
+
+            return card;
+        }
+
+        // Логика перетаскивания мышью и пальцем (Pointer Events)
+        function attachSwipeGestures(card, cardData) {
+            let startX = 0;
+            let startY = 0;
+            let currentX = 0;
+            let isDragging = false;
+
+            const stampLike = card.querySelector('.stamp-like');
+            const stampPass = card.querySelector('.stamp-pass');
+
+            card.addEventListener('pointerdown', (e) => {
+                if (isAnimating || e.target.closest('button')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                card.style.transition = 'none';
+                card.setPointerCapture(e.pointerId);
+            });
+
+            card.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                currentX = e.clientX - startX;
+                const currentY = (e.clientY - startY) * 0.25;
+                const rotate = currentX * 0.06;
+
+                card.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotate}deg)`;
+
+                const opacity = Math.min(Math.abs(currentX) / 100, 1);
+                if (currentX > 15) {
+                    stampLike.style.opacity = opacity;
+                    stampPass.style.opacity = 0;
+                } else if (currentX < -15) {
+                    stampPass.style.opacity = opacity;
+                    stampLike.style.opacity = 0;
+                } else {
+                    stampLike.style.opacity = 0;
+                    stampPass.style.opacity = 0;
+                }
+            });
+
+            const endDrag = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                if (card.hasPointerCapture(e.pointerId)) {
+                    card.releasePointerCapture(e.pointerId);
+                }
+
+                const threshold = 95;
+                if (currentX > threshold) {
+                    completeSwipe('right', card, cardData);
+                } else if (currentX < -threshold) {
+                    completeSwipe('left', card, cardData);
+                } else {
+                    card.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+                    card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+                    stampLike.style.opacity = 0;
+                    stampPass.style.opacity = 0;
+                }
+                currentX = 0;
+            };
+
+            card.addEventListener('pointerup', endDrag);
+            card.addEventListener('pointercancel', endDrag);
+        }
+
+        // Завершение свайпа (анимация вылета карточки)
+        function completeSwipe(direction, cardElement, cardData) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const stampLike = cardElement.querySelector('.stamp-like');
+            const stampPass = cardElement.querySelector('.stamp-pass');
+
+            if (direction === 'right') {
+                stampLike.style.opacity = 1;
+                registerLike(cardData);
+            } else {
+                stampPass.style.opacity = 1;
+            }
+
+            const flyX = direction === 'right' ? window.innerWidth * 0.85 : -window.innerWidth * 0.85;
+            const flyRotate = direction === 'right' ? 24 : -24;
+
+            cardElement.style.transition = 'transform 0.38s ease-out, opacity 0.35s ease-out';
+            cardElement.style.transform = `translate3d(${flyX}px, 40px, 0) rotate(${flyRotate}deg)`;
+            cardElement.style.opacity = '0';
+
+            const nextCard = swipeDeck.querySelector('.is-next');
+            if (nextCard) {
+                nextCard.style.transition = 'transform 0.35s ease, opacity 0.35s ease';
+                nextCard.style.transform = 'scale(1) translateY(0)';
+                nextCard.style.opacity = '1';
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                isAnimating = false;
+                renderDeck();
+            }, 340);
+        }
+
+        // Отрисовка колоды
+        function renderDeck() {
+            swipeDeck.innerHTML = '';
+
+            if (allProfiles.length === 0) {
+                swipeDeck.innerHTML = '<div class="swipe-empty-state">Пока нет ни одной анкеты.<br>Станьте первой!</div>';
+                swipeControls.style.display = 'none';
+                swipeCounter.textContent = '';
                 return;
             }
 
+            if (currentIndex >= allProfiles.length) {
+                swipeDeck.innerHTML = `
+                    <div class="swipe-empty-state">
+                        <div class="empty-heart">♥</div>
+                        <h3>Вы посмотрели все анкеты</h3>
+                        <p>Загляните чуть позже или начните просмотр заново.</p>
+                        <button type="button" class="btn-submit btn-pill" id="restart-deck-btn">Смотреть заново</button>
+                    </div>
+                `;
+                swipeControls.style.display = 'none';
+                swipeCounter.textContent = '';
+
+                document.getElementById('restart-deck-btn').addEventListener('click', () => {
+                    currentIndex = 0;
+                    renderDeck();
+                });
+                return;
+            }
+
+            swipeControls.style.display = 'flex';
+            btnRewind.disabled = currentIndex === 0;
+            swipeCounter.textContent = `Анкета ${currentIndex + 1} из ${allProfiles.length}`;
+
+            // Если есть следующая карточка — кладем её под низ для глубины
+            if (currentIndex + 1 < allProfiles.length) {
+                const nextEl = createSwipeCardElement(allProfiles[currentIndex + 1], false);
+                swipeDeck.appendChild(nextEl);
+            }
+
+            // Текущая верхняя карточка
+            const topEl = createSwipeCardElement(allProfiles[currentIndex], true);
+            swipeDeck.appendChild(topEl);
+        }
+
+        // Кнопки управления под карточкой
+        btnPass.addEventListener('click', () => {
+            const topCard = swipeDeck.querySelector('.is-top');
+            if (topCard && allProfiles[currentIndex]) {
+                completeSwipe('left', topCard, allProfiles[currentIndex]);
+            }
+        });
+
+        btnLikeSwipe.addEventListener('click', () => {
+            const topCard = swipeDeck.querySelector('.is-top');
+            if (topCard && allProfiles[currentIndex]) {
+                completeSwipe('right', topCard, allProfiles[currentIndex]);
+            }
+        });
+
+        btnRewind.addEventListener('click', () => {
+            if (currentIndex > 0 && !isAnimating) {
+                currentIndex--;
+                renderDeck();
+            }
+        });
+
+        // Подписка на базу Firebase в реальном времени
+        db.collection('girls_profiles').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            allProfiles = [];
             snapshot.forEach(doc => {
-                const cardData = doc.data();
-                const cardId = doc.id;
-                const likedBy = Array.isArray(cardData.likedBy) ? cardData.likedBy : [];
-                const isLiked = currentUsername && likedBy.includes(currentUsername);
-                const isOwner = currentUsername && cardData.ownerAccount === currentUsername.toLowerCase();
-
-                const card = document.createElement('article');
-                card.className = 'dating-card';
-
-                const imgWrap = document.createElement('div');
-                imgWrap.className = 'dating-photo-box';
-                const img = document.createElement('img');
-                img.src = cardData.photo;
-                img.alt = cardData.name;
-                imgWrap.appendChild(img);
-
-                const content = document.createElement('div');
-                content.className = 'dating-card-content';
-
-                const titleRow = document.createElement('div');
-                titleRow.className = 'dating-title-row';
-
-                const nameH2 = document.createElement('h2');
-                nameH2.textContent = `${cardData.name}, ${cardData.age}`;
-                titleRow.appendChild(nameH2);
-
-                // Кнопку «Удалить» видит только владелец аккаунта с любого устройства
-                if (isOwner) {
-                    const delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.className = 'btn-delete-post';
-                    delBtn.textContent = 'Удалить';
-                    delBtn.onclick = async () => {
-                        await db.collection('girls_profiles').doc(cardId).delete();
-                    };
-                    titleRow.appendChild(delBtn);
-                }
-
-                const bioP = document.createElement('p');
-                bioP.className = 'dating-bio';
-                bioP.textContent = cardData.bio;
-
-                const footer = document.createElement('div');
-                footer.className = 'dating-card-footer';
-
-                const dateSpan = document.createElement('span');
-                dateSpan.className = 'opinion-date';
-                dateSpan.textContent = cardData.date || '';
-
-                const likeBtn = document.createElement('button');
-                likeBtn.type = 'button';
-                likeBtn.className = 'btn-like' + (isLiked ? ' liked' : '');
-                likeBtn.innerHTML = `<span class="heart-icon">♥</span> <span class="like-count">${likedBy.length}</span>`;
-
-                likeBtn.onclick = async () => {
-                    if (!currentUsername) {
-                        alert('Войдите в аккаунт, чтобы ставить симпатии!');
-                        return;
-                    }
-                    const cardRef = db.collection('girls_profiles').doc(cardId);
-                    if (isLiked) {
-                        await cardRef.update({
-                            likedBy: firebase.firestore.FieldValue.arrayRemove(currentUsername)
-                        });
-                    } else {
-                        await cardRef.update({
-                            likedBy: firebase.firestore.FieldValue.arrayUnion(currentUsername)
-                        });
-                    }
-                };
-
-                footer.appendChild(dateSpan);
-                footer.appendChild(likeBtn);
-
-                content.appendChild(titleRow);
-                content.appendChild(bioP);
-                content.appendChild(footer);
-
-                card.appendChild(imgWrap);
-                card.appendChild(content);
-                datingGrid.appendChild(card);
+                allProfiles.push({ id: doc.id, ...doc.data() });
             });
+            if (currentIndex >= allProfiles.length && allProfiles.length > 0) {
+                currentIndex = 0;
+            }
+            renderDeck();
         });
     </script>
 
