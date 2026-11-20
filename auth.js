@@ -62,15 +62,82 @@ function logoutUser() {
 document.addEventListener('DOMContentLoaded', async () => {
     const header = document.querySelector('header');
     if (header) {
-        const logoDiv = header.querySelector('.site-logo');
-        if (logoDiv && logoDiv.tagName !== 'A') {
-            const logoLink = document.createElement('a');
-            logoLink.href = 'index.html';
-            logoLink.className = 'site-logo';
-            logoLink.textContent = logoDiv.textContent;
-            logoDiv.replaceWith(logoLink);
+        // Группируем левую колонку шапки: логотип AlushtaGirls сверху + Навигация снизу
+        let leftCol = header.querySelector('.header-left-stack');
+        if (!leftCol) {
+            leftCol = document.createElement('div');
+            leftCol.className = 'header-left-stack';
+            header.prepend(leftCol);
         }
 
+        const logoDiv = header.querySelector('.site-logo');
+        if (logoDiv) {
+            if (logoDiv.tagName !== 'A') {
+                const logoLink = document.createElement('a');
+                logoLink.href = 'index.html';
+                logoLink.className = 'site-logo';
+                logoLink.textContent = logoDiv.textContent;
+                logoDiv.remove();
+                leftCol.appendChild(logoLink);
+            } else {
+                leftCol.appendChild(logoDiv);
+            }
+        }
+
+        // Собираем все 5 ссылок из <nav> в компактный выпадающий список «Навигация»
+        const oldNav = document.querySelector('nav');
+        if (oldNav) {
+            const links = Array.from(oldNav.querySelectorAll('a'));
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'nav-dropdown';
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'nav-dropdown-btn';
+            toggleBtn.innerHTML = '<span>☰ Навигация</span> <span class="nav-arrow">▾</span>';
+
+            const menuList = document.createElement('div');
+            menuList.className = 'nav-dropdown-menu';
+
+            links.forEach((link, index) => {
+                link.removeAttribute('target');
+                const labelEl = link.querySelector('.nav-label');
+                let text = labelEl ? labelEl.textContent.trim() : link.textContent.replace(/^\d+\)\s*/, '').trim();
+
+                if (text.toLowerCase().includes('сугубое мнение') || link.getAttribute('href') === 'contacts.html') {
+                    text = 'Поддержка';
+                }
+
+                const newLink = document.createElement('a');
+                newLink.href = link.getAttribute('href');
+                newLink.className = 'nav-dropdown-item';
+                newLink.innerHTML = `<span class="nav-num">${index + 1})</span> <span>${text}</span>`;
+                menuList.appendChild(newLink);
+            });
+
+            dropdown.appendChild(toggleBtn);
+            dropdown.appendChild(menuList);
+            leftCol.appendChild(dropdown);
+
+            // Удаляем старый нижний блок навигации
+            oldNav.remove();
+
+            // Открытие / закрытие списка по клику
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('open');
+            });
+
+            // Закрытие при клике в любое другое место экрана
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // Правая панель пользователя
         const userPanel = document.createElement('div');
         userPanel.className = 'user-top-bar';
 
@@ -78,44 +145,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (currentUsername) {
             userPanel.innerHTML = `
-                <a href="profile.html" class="profile-link">👤 ${currentUsername}</a>
-                <button type="button" class="logout-btn" onclick="logoutUser()">Выйти</button>
-            `;
-            header.appendChild(userPanel);
-
-            try {
-                const userData = await fetchUserByUsername(currentUsername);
-                if (userData) {
-                    const avatarHtml = userData.avatar 
-                        ? `<img src="${userData.avatar}" alt="avatar" class="top-bar-avatar">` 
-                        : '👤';
-                    userPanel.querySelector('.profile-link').innerHTML = `${avatarHtml} ${userData.username}`;
-                }
-            } catch (err) {
-                console.error('Ошибка загрузки профиля в шапке:', err);
-            }
-        } else {
-            userPanel.innerHTML = `
-                <a href="login.html" class="profile-link">Войти</a>
-                <a href="registr.html" class="profile-link">Регистрация</a>
-            `;
-            header.appendChild(userPanel);
-        }
-    }
-
-    // Оформляем навигацию (<nav>): меняем «Сугубое мнение» на «Поддержка», убираем target="_blank" и ставим нумерацию
-    const nav = document.querySelector('nav');
-    if (nav) {
-        const links = nav.querySelectorAll('a');
-        links.forEach((link, index) => {
-            link.removeAttribute('target');
-            let text = link.textContent.trim();
-            if (text.toLowerCase().includes('сугубое мнение') || link.getAttribute('href') === 'contacts.html') {
-                text = 'Поддержка';
-            }
-            if (!link.querySelector('.nav-num')) {
-                link.innerHTML = `<span class="nav-num">${index + 1})</span> <span class="nav-label">${text}</span>`;
-            }
-        });
-    }
-});
