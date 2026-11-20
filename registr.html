@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация — Girls from Alushta</title>
+    <title>Регистрация — Знакомства Алушта Girls</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,59 +14,71 @@
 
     <main>
         <h1>Регистрация</h1>
-        <p>Создайте аккаунт, чтобы получить свой профиль.</p>
+        <p>Создайте аккаунт и подтвердите ваш Email, чтобы получить доступ ко всем функциям сайта.</p>
 
         <form class="auth-form" id="register-form">
             <div class="form-group">
-                <label for="username">Имя пользователя (Логин)</label>
-                <input type="text" id="username" placeholder="Введите логин" required>
+                <label for="reg-username">Имя пользователя (логин)</label>
+                <input type="text" id="reg-username" name="username" placeholder="Придумайте логин (латиница/цифры)" minlength="3" maxlength="20" required>
             </div>
 
             <div class="form-group">
-                <label for="email">Электронная почта</label>
-                <input type="email" id="email" placeholder="example@mail.ru" required>
+                <label for="reg-email">Электронная почта (Email)</label>
+                <input type="email" id="reg-email" name="email" placeholder="example@gmail.com" required>
             </div>
 
             <div class="form-group">
-                <label for="password">Пароль</label>
-                <input type="password" id="password" placeholder="Придумайте пароль" minlength="6" required>
+                <label for="reg-password">Пароль (минимум 6 символов)</label>
+                <input type="password" id="reg-password" name="password" placeholder="••••••••" minlength="6" required>
             </div>
 
             <div class="form-group">
-                <label for="confirm-password">Подтвердите пароль</label>
-                <input type="password" id="confirm-password" placeholder="Повторите пароль" minlength="6" required>
+                <label for="reg-password-confirm">Подтвердите пароль</label>
+                <input type="password" id="reg-password-confirm" name="password_confirm" placeholder="••••••••" minlength="6" required>
             </div>
 
-            <div id="form-message" class="form-message"></div>
+            <div id="reg-message" class="form-message"></div>
 
-            <button type="submit" class="btn-submit" id="reg-btn">Зарегистрироваться</button>
+            <button type="submit" class="btn-submit" id="reg-submit-btn">Зарегистрироваться</button>
 
             <p class="auth-switch">Уже есть аккаунт? <a href="login.html">Войти</a></p>
         </form>
 
         <nav>
             <a href="index.html">На главную</a>
-            <a href="about.html" target="_blank">Girls From Alushta</a>
-            <a href="contacts.html" target="_blank">Сугубое мнение</a>
-            <a href="baze.html" target="_blank">FAQ</a>
+            <a href="about.html">Girls From Alushta</a>
+            <a href="contacts.html">Поддержка</a>
+            <a href="baze.html">FAQ</a>
+            <a href="registr.html">Регистрация</a>
         </nav>
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="auth.js"></script>
     <script>
-        const form = document.getElementById('register-form');
-        const messageBox = document.getElementById('form-message');
-        const regBtn = document.getElementById('reg-btn');
+        if (getCurrentUsername()) {
+            window.location.href = 'profile.html';
+        }
 
-        form.addEventListener('submit', async function(event) {
+        const regForm = document.getElementById('register-form');
+        const messageBox = document.getElementById('reg-message');
+        const submitBtn = document.getElementById('reg-submit-btn');
+
+        regForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim().toLowerCase();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
+            const username = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-password-confirm').value;
+
+            if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+                messageBox.textContent = 'Логин должен содержать 3–20 символов (латиница, цифры или _).';
+                messageBox.className = 'form-message error';
+                return;
+            }
 
             if (password !== confirmPassword) {
                 messageBox.textContent = 'Ошибка: пароли не совпадают!';
@@ -74,59 +86,67 @@
                 return;
             }
 
-            regBtn.disabled = true;
-            regBtn.textContent = 'Проверка данных...';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Создание аккаунта...';
+            messageBox.textContent = '';
 
             try {
-                // 1. Проверяем, не занят ли логин
                 const userId = username.toLowerCase();
-                const userRef = db.collection('users').doc(userId);
-                const existingDoc = await userRef.get();
+                const userDocRef = db.collection('users').doc(userId);
+                const existingDoc = await userDocRef.get();
 
                 if (existingDoc.exists) {
-                    messageBox.textContent = 'Пользователь с таким логином уже существует!';
+                    messageBox.textContent = 'Ошибка: пользователь с таким логином уже существует!';
                     messageBox.className = 'form-message error';
-                    regBtn.disabled = false;
-                    regBtn.textContent = 'Зарегистрироваться';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Зарегистрироваться';
                     return;
                 }
 
-                // 2. Проверяем, не зарегистрирована ли уже эта почта
-                const emailSnapshot = await db.collection('users').where('email', '==', email).get();
-                if (!emailSnapshot.empty) {
-                    messageBox.textContent = 'Аккаунт с такой электронной почтой уже существует!';
-                    messageBox.className = 'form-message error';
-                    regBtn.disabled = false;
-                    regBtn.textContent = 'Зарегистрироваться';
-                    return;
-                }
+                // 1. Создаём пользователя в Firebase Authentication (минимум 6 символов пароль)
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 
-                regBtn.textContent = 'Создание аккаунта...';
+                // 2. Отправляем письмо с подтверждением на указанную почту
+                await userCredential.user.sendEmailVerification();
 
-                const newUser = {
+                const today = new Date().toLocaleDateString('ru-RU');
+
+                // 3. Сохраняем профиль в Firestore
+                await userDocRef.set({
+                    uid: userCredential.user.uid,
                     username: username,
                     email: email,
                     password: password,
-                    bio: 'Житель побережья Алушты',
+                    bio: '',
                     avatar: '',
-                    regDate: new Date().toLocaleDateString('ru-RU')
-                };
+                    emailVerified: false,
+                    regDate: today
+                });
 
-                await userRef.set(newUser);
-                localStorage.setItem('alushta_user', username);
+                // Сразу выходим из неактивированной сессии до перехода по ссылке из письма
+                await auth.signOut();
 
-                messageBox.textContent = 'Аккаунт создан! Переходим в профиль...';
+                regForm.reset();
+                messageBox.innerHTML = `
+                    ✅ Письмо со ссылкой подтверждения отправлено на <strong>${email}</strong>!<br>
+                    Откройте почту (проверьте папку «Спам»), перейдите по ссылке в письме, а затем <a href="login.html" style="color: #2ee59d; font-weight: bold;">войдите в аккаунт</a>.
+                `;
                 messageBox.className = 'form-message success';
-
-                setTimeout(() => {
-                    window.location.href = 'profile.html';
-                }, 800);
             } catch (error) {
-                console.error(error);
-                messageBox.textContent = 'Ошибка соединения с базой. Проверьте настройки Firestore.';
+                console.error('Ошибка регистрации:', error);
+                if (error.code === 'auth/email-already-in-use') {
+                    messageBox.textContent = 'Эта почта уже зарегистрирована! Попробуйте войти.';
+                } else if (error.code === 'auth/invalid-email') {
+                    messageBox.textContent = 'Некорректный формат электронной почты!';
+                } else if (error.code === 'auth/weak-password') {
+                    messageBox.textContent = 'Пароль слишком простой (нужно минимум 6 символов).';
+                } else {
+                    messageBox.textContent = 'Ошибка при регистрации: ' + error.message;
+                }
                 messageBox.className = 'form-message error';
-                regBtn.disabled = false;
-                regBtn.textContent = 'Зарегистрироваться';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Зарегистрироваться';
             }
         });
     </script>
