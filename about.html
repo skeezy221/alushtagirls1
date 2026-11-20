@@ -16,19 +16,28 @@
         <h1>Girls From Alushta</h1>
         <p>Анкеты девушек Алушты для общения, прогулок и новых знакомств.</p>
 
-        <!-- Кнопка открытия формы -->
-        <div class="dating-top-actions">
+        <!-- Кнопка для авторизованных пользователей -->
+        <div class="dating-top-actions" id="auth-dating-actions" style="display: none;">
             <button type="button" class="btn-submit" id="toggle-form-btn">+ Разместить свою анкету</button>
         </div>
 
-        <!-- Форма создания независимой анкеты -->
+        <!-- Плашка для неавторизованных гостей -->
+        <div class="guest-notice" id="dating-guest-notice" style="display: none;">
+            <p>Размещать анкеты и ставить симпатии могут только зарегистрированные участники.</p>
+            <div class="guest-notice-actions">
+                <a href="login.html" class="btn-submit">Войти в аккаунт</a>
+                <a href="registr.html" class="btn-outline">Регистрация</a>
+            </div>
+        </div>
+
+        <!-- Форма создания анкеты (доступна только после входа, но поля независимы от профиля) -->
         <form class="dating-form" id="dating-form" style="display: none;">
             <h2>Новая анкета</h2>
-            <p class="form-hint">Анкета не привязана к вашему профилю — можно указать любое имя.</p>
+            <p class="form-hint">Данные анкеты не обязаны совпадать с вашим профилем — вы можете указать любое имя и загрузить отдельное фото.</p>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="girl-name">Ваше имя *</label>
+                    <label for="girl-name">Имя в анкете *</label>
                     <input type="text" id="girl-name" placeholder="Например: Алина" maxlength="30" required>
                 </div>
 
@@ -42,7 +51,7 @@
                 <label for="girl-photo">Фотография *</label>
                 <div class="photo-upload-box">
                     <label for="girl-photo" class="btn-outline photo-select-btn">📷 Выбрать фото</label>
-                    <input type="file" id="girl-photo" accept="image/*" style="display: none;" required>
+                    <input type="file" id="girl-photo" accept="image/*" style="display: none;">
                     <span id="photo-file-name" class="photo-file-name">Файл не выбран</span>
                 </div>
                 <div id="photo-preview-wrap" class="photo-preview-wrap" style="display: none;">
@@ -81,6 +90,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="auth.js"></script>
     <script>
+        const currentUsername = getCurrentUsername();
+        const authActions = document.getElementById('auth-dating-actions');
+        const guestNotice = document.getElementById('dating-guest-notice');
         const toggleFormBtn = document.getElementById('toggle-form-btn');
         const cancelFormBtn = document.getElementById('cancel-form-btn');
         const datingForm = document.getElementById('dating-form');
@@ -94,15 +106,16 @@
 
         let compressedPhotoBase64 = '';
 
-        // Уникальный локальный ключ браузера для управления своими анкетами без привязки к аккаунту
-        let deviceToken = localStorage.getItem('alushta_device_token');
-        if (!deviceToken) {
-            deviceToken = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
-            localStorage.setItem('alushta_device_token', deviceToken);
+        // Показываем кнопку создания анкеты только вошедшим пользователям
+        if (currentUsername) {
+            authActions.style.display = 'block';
+        } else {
+            guestNotice.style.display = 'block';
         }
 
         // Открытие и закрытие формы
         toggleFormBtn.addEventListener('click', () => {
+            if (!currentUsername) return;
             datingForm.style.display = 'block';
             toggleFormBtn.style.display = 'none';
         });
@@ -163,6 +176,11 @@
         datingForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
+            if (!currentUsername) {
+                alert('Для публикации анкеты необходимо войти в аккаунт!');
+                return;
+            }
+
             const name = document.getElementById('girl-name').value.trim();
             const age = parseInt(document.getElementById('girl-age').value, 10);
             const bio = document.getElementById('girl-bio').value.trim();
@@ -185,8 +203,8 @@
                     age: age,
                     photo: compressedPhotoBase64,
                     bio: bio,
-                    likes: 0,
-                    ownerToken: deviceToken,
+                    likedBy: [],
+                    ownerAccount: currentUsername.toLowerCase(), // скрытая привязка только для права удаления
                     date: dateStr,
                     createdAt: Date.now()
                 });
@@ -216,13 +234,12 @@
                 return;
             }
 
-            const likedCards = JSON.parse(localStorage.getItem('alushta_liked_girls') || '[]');
-
             snapshot.forEach(doc => {
                 const cardData = doc.data();
                 const cardId = doc.id;
-                const isLiked = likedCards.includes(cardId);
-                const isOwner = cardData.ownerToken === deviceToken;
+                const likedBy = Array.isArray(cardData.likedBy) ? cardData.likedBy : [];
+                const isLiked = currentUsername && likedBy.includes(currentUsername);
+                const isOwner = currentUsername && cardData.ownerAccount === currentUsername.toLowerCase();
 
                 const card = document.createElement('article');
                 card.className = 'dating-card';
@@ -244,6 +261,7 @@
                 nameH2.textContent = `${cardData.name}, ${cardData.age}`;
                 titleRow.appendChild(nameH2);
 
+                // Кнопку «Удалить» видит только владелец аккаунта с любого устройства
                 if (isOwner) {
                     const delBtn = document.createElement('button');
                     delBtn.type = 'button';
@@ -269,23 +287,21 @@
                 const likeBtn = document.createElement('button');
                 likeBtn.type = 'button';
                 likeBtn.className = 'btn-like' + (isLiked ? ' liked' : '');
-                likeBtn.innerHTML = `<span class="heart-icon">♥</span> <span class="like-count">${cardData.likes || 0}</span>`;
+                likeBtn.innerHTML = `<span class="heart-icon">♥</span> <span class="like-count">${likedBy.length}</span>`;
 
                 likeBtn.onclick = async () => {
-                    let currentLikesList = JSON.parse(localStorage.getItem('alushta_liked_girls') || '[]');
+                    if (!currentUsername) {
+                        alert('Войдите в аккаунт, чтобы ставить симпатии!');
+                        return;
+                    }
                     const cardRef = db.collection('girls_profiles').doc(cardId);
-
-                    if (currentLikesList.includes(cardId)) {
-                        currentLikesList = currentLikesList.filter(id => id !== cardId);
-                        localStorage.setItem('alushta_liked_girls', JSON.stringify(currentLikesList));
+                    if (isLiked) {
                         await cardRef.update({
-                            likes: firebase.firestore.FieldValue.increment(-1)
+                            likedBy: firebase.firestore.FieldValue.arrayRemove(currentUsername)
                         });
                     } else {
-                        currentLikesList.push(cardId);
-                        localStorage.setItem('alushta_liked_girls', JSON.stringify(currentLikesList));
                         await cardRef.update({
-                            likes: firebase.firestore.FieldValue.increment(1)
+                            likedBy: firebase.firestore.FieldValue.arrayUnion(currentUsername)
                         });
                     }
                 };
