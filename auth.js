@@ -30,7 +30,6 @@ function logoutUser() {
 document.addEventListener('DOMContentLoaded', async () => {
     const header = document.querySelector('header');
     if (header) {
-        // Превращаем логотип в кликабельную ссылку на главную страницу
         const logoDiv = header.querySelector('.site-logo');
         if (logoDiv && logoDiv.tagName !== 'A') {
             const logoLink = document.createElement('a');
@@ -72,11 +71,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Оформляем навигацию (<nav>) в виде нумерованного списка 1) 2) 3)...
+    // Оформляем навигацию (<nav>): убираем открытие в новой вкладке и ставим нумерацию 1) 2) 3)...
     const nav = document.querySelector('nav');
     if (nav) {
         const links = nav.querySelectorAll('a');
         links.forEach((link, index) => {
+            link.removeAttribute('target');
             if (!link.querySelector('.nav-num')) {
                 const text = link.textContent.trim();
                 link.innerHTML = `<span class="nav-num">${index + 1})</span> <span class="nav-label">${text}</span>`;
