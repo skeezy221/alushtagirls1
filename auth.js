@@ -65,6 +65,51 @@ async function fetchUserByUsername(username) {
     return doc.exists ? doc.data() : null;
 }
 
+// Начисление очков активности пользователю в облаке
+async function addUserActivityPoints(username, pointsToAdd) {
+    if (!username || !pointsToAdd) return;
+    try {
+        await db.collection('users').doc(username.trim().toLowerCase()).update({
+            activityPoints: firebase.firestore.FieldValue.increment(pointsToAdd)
+        });
+    } catch (err) {
+        console.error('Ошибка начисления очков:', err);
+    }
+}
+
+// Форматирование минут в читаемый вид (например: "2 ч 15 мин" или "42 мин")
+function formatTimeSpent(totalMinutes) {
+    const mins = Math.max(0, Math.floor(totalMinutes || 0));
+    if (mins < 60) return `${mins} мин`;
+    const hours = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return remMins > 0 ? `${hours} ч ${remMins} мин` : `${hours} ч`;
+}
+
+// Фоновый трекер времени на сайте для авторизованного пользователя
+(function startOnlineTimeTracker() {
+    const user = getCurrentUsername();
+    if (!user) return;
+
+    let sessionMinutes = 0;
+    setInterval(async () => {
+        if (document.visibilityState !== 'visible') return;
+        sessionMinutes++;
+        try {
+            const updates = {
+                timeSpentMinutes: firebase.firestore.FieldValue.increment(1)
+            };
+            // Каждые 5 минут на сайте приносят +1 очко активности
+            if (sessionMinutes % 5 === 0) {
+                updates.activityPoints = firebase.firestore.FieldValue.increment(1);
+            }
+            await db.collection('users').doc(user.toLowerCase()).update(updates);
+        } catch (e) {
+            console.error('Ошибка обновления времени на сайте:', e);
+        }
+    }, 60000);
+})();
+
 async function logoutUser() {
     if (auth) {
         try {
