@@ -156,11 +156,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         userPanel.className = 'user-top-bar';
 
         const currentUsername = getCurrentUsername();
+        const redAdminBadge = '<span style="background: linear-gradient(135deg, #dc143c, #9e0b28); color: #ffffff; border: 1px solid #ff4d6d; box-shadow: 0 0 10px rgba(220, 20, 60, 0.7); font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px;">ADMIN</span>';
 
         if (currentUsername) {
-            const initialBadge = isAdminUser()
-                ? '<span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px;">ADMIN</span>'
-                : '';
+            const initialBadge = isAdminUser() ? redAdminBadge : '';
 
             userPanel.innerHTML = `
                 <a href="profile.html" class="profile-link">👤 ${currentUsername}${initialBadge}</a>
@@ -174,9 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (userData.email) {
                         localStorage.setItem('alushta_email', userData.email.toLowerCase());
                     }
-                    const refreshedBadge = isAdminUser()
-                        ? '<span style="background: linear-gradient(135deg, #f5b041, #d4ac0d); color: #000; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px;">ADMIN</span>'
-                        : '';
+                    const refreshedBadge = isAdminUser() ? redAdminBadge : '';
                     const avatarHtml = userData.avatar 
                         ? `<img src="${userData.avatar}" alt="avatar" class="top-bar-avatar">` 
                         : '👤';
