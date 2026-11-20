@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль участника — Знакомства Алушта Girls</title>
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
     <style>
         .public-profile-card {
             max-width: 480px;
@@ -56,7 +56,34 @@
         .public-reg-date {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.58);
-            margin: 0 0 20px 0;
+            margin: 0 0 18px 0;
+        }
+
+        /* Плашка статистики участника (Лайки / Время / Очки) */
+        .public-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .stat-pill-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(220, 20, 60, 0.32);
+            border-radius: 14px;
+            padding: 10px 8px;
+        }
+
+        .stat-pill-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .stat-pill-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.62);
         }
 
         .public-bio-box {
@@ -92,6 +119,29 @@
             justify-content: center;
             gap: 10px;
         }
+
+        .btn-profile-like {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid #dc143c;
+            background: rgba(220, 20, 60, 0.18);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-profile-like:hover {
+            background: rgba(220, 20, 60, 0.35);
+            box-shadow: 0 0 14px rgba(220, 20, 60, 0.55);
+        }
+
+        .btn-profile-like.liked {
+            background: linear-gradient(135deg, #dc143c, #ff2e55);
+            border-color: transparent;
+            box-shadow: 0 4px 16px rgba(220, 20, 60, 0.6);
+        }
     </style>
 </head>
 <body>
@@ -119,14 +169,14 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="auth.js?v=6"></script>
+    <script src="auth.js?v=7"></script>
     <script>
         const profileBox = document.getElementById('public-profile-box');
         const params = new URLSearchParams(window.location.search);
         const targetUsername = (params.get('u') || '').trim();
         const currentUsername = getCurrentUsername();
 
-        async function loadPublicProfile() {
+        function loadPublicProfile() {
             if (!targetUsername) {
                 profileBox.innerHTML = `
                     <p style="color: #ff6b81; margin-bottom: 16px;">Пользователь не указан.</p>
@@ -135,15 +185,14 @@
                 return;
             }
 
-            // Если открыли свой же профиль — перенаправляем в личный кабинет
             if (currentUsername && currentUsername.toLowerCase() === targetUsername.toLowerCase()) {
                 window.location.href = 'profile.html';
                 return;
             }
 
-            try {
-                const doc = await db.collection('users').doc(targetUsername.toLowerCase()).get();
+            const userDocRef = db.collection('users').doc(targetUsername.toLowerCase());
 
+            userDocRef.onSnapshot(doc => {
                 if (!doc.exists) {
                     profileBox.innerHTML = `
                         <p style="color: #ff6b81; margin-bottom: 16px;">Пользователь «@${targetUsername}» не найден.</p>
@@ -170,6 +219,14 @@
                     ? user.bio
                     : 'Пользователь пока не добавил информацию о себе.';
 
+                const likedByUsers = Array.isArray(user.likedByUsers) ? user.likedByUsers : [];
+                const totalProfileLikes = user.profileLikes || likedByUsers.length || 0;
+                const isLikedByMe = currentUsername && likedByUsers.includes(currentUsername.toLowerCase());
+                const formattedTime = typeof formatTimeSpent === 'function'
+                    ? formatTimeSpent(user.timeSpentMinutes || 0)
+                    : `${user.timeSpentMinutes || 0} мин`;
+                const points = user.activityPoints || 0;
+
                 const hasAdminAccess = typeof isAdminUser === 'function' && isAdminUser();
 
                 const displayTitle = user.displayName
@@ -181,12 +238,30 @@
                     <h2 class="public-username">${displayTitle}${adminBadge}</h2>
                     <p class="public-reg-date">На сайте с: ${user.regDate || 'недавно'}</p>
 
+                    <div class="public-stats-grid">
+                        <div class="stat-pill-box">
+                            <div class="stat-pill-val">♥ ${totalProfileLikes}</div>
+                            <div class="stat-pill-label">Лайки профиля</div>
+                        </div>
+                        <div class="stat-pill-box">
+                            <div class="stat-pill-val">⏱ ${formattedTime}</div>
+                            <div class="stat-pill-label">На сайте</div>
+                        </div>
+                        <div class="stat-pill-box">
+                            <div class="stat-pill-val">⚡ ${points}</div>
+                            <div class="stat-pill-label">Очки</div>
+                        </div>
+                    </div>
+
                     <div class="public-bio-box">
                         <div class="public-bio-label">О себе</div>
                         <p class="public-bio-text" id="public-bio-content"></p>
                     </div>
 
                     <div class="public-actions" id="public-actions">
+                        <button type="button" class="btn-profile-like ${isLikedByMe ? 'liked' : ''}" id="like-profile-btn">
+                            ${isLikedByMe ? '♥ Профиль понравился' : '♥ Лайкнуть профиль'}
+                        </button>
                         <a href="index.html" class="btn-outline">← К поиску</a>
                         <a href="contacts.html?report=${encodeURIComponent('@' + user.username)}" class="btn-outline" style="border-color: rgba(255, 77, 109, 0.6); color: #ff6b81;">🚨 Пожаловаться</a>
                     </div>
@@ -194,7 +269,36 @@
 
                 document.getElementById('public-bio-content').textContent = bioText;
 
-                // Админская кнопка удаления аккаунта прямо со страницы профиля
+                // Обработка лайка профиля
+                const likeProfileBtn = document.getElementById('like-profile-btn');
+                likeProfileBtn.onclick = async () => {
+                    if (!currentUsername) {
+                        alert('Войдите в аккаунт, чтобы поставить лайк профилю!');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+
+                    const meKey = currentUsername.toLowerCase();
+                    if (likedByUsers.includes(meKey)) {
+                        // Снимаем лайк
+                        await userDocRef.update({
+                            likedByUsers: firebase.firestore.FieldValue.arrayRemove(meKey),
+                            profileLikes: firebase.firestore.FieldValue.increment(-1)
+                        });
+                    } else {
+                        // Ставим лайк и начисляем +5 очков владельцу профиля и +1 очко тому, кто лайкнул
+                        await userDocRef.update({
+                            likedByUsers: firebase.firestore.FieldValue.arrayUnion(meKey),
+                            profileLikes: firebase.firestore.FieldValue.increment(1),
+                            activityPoints: firebase.firestore.FieldValue.increment(5)
+                        });
+                        if (typeof addUserActivityPoints === 'function') {
+                            await addUserActivityPoints(currentUsername, 1);
+                        }
+                    }
+                };
+
+                // Админская кнопка удаления аккаунта
                 if (hasAdminAccess) {
                     const delBtn = document.createElement('button');
                     delBtn.type = 'button';
@@ -202,17 +306,17 @@
                     delBtn.textContent = '👑 Удалить аккаунт';
                     delBtn.onclick = async () => {
                         if (confirm(`Удалить аккаунт @${user.username}?`)) {
-                            await db.collection('users').doc(doc.id).delete();
+                            await userDocRef.delete();
                             alert('Аккаунт удалён.');
                             window.location.href = 'index.html';
                         }
                     };
                     document.getElementById('public-actions').appendChild(delBtn);
                 }
-            } catch (err) {
+            }, err => {
                 console.error(err);
                 profileBox.innerHTML = `<p style="color: #ff6b81;">Ошибка при загрузке профиля.</p>`;
-            }
+            });
         }
 
         loadPublicProfile();
