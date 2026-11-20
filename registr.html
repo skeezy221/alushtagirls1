@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация — Girls from Alushta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="site-logo">AlushtaGirls</div>
+    </header>
+
+    <main>
+        <h1>Регистрация</h1>
+        <p>Создайте аккаунт, чтобы получить свой профиль.</p>
+
+        <form class="auth-form" id="register-form">
+            <div class="form-group">
+                <label for="username">Имя пользователя (Логин)</label>
+                <input type="text" id="username" placeholder="Введите логин" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Электронная почта</label>
+                <input type="email" id="email" placeholder="example@mail.ru" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" placeholder="Придумайте пароль" minlength="6" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm-password">Подтвердите пароль</label>
+                <input type="password" id="confirm-password" placeholder="Повторите пароль" minlength="6" required>
+            </div>
+
+            <div id="form-message" class="form-message"></div>
+
+            <button type="submit" class="btn-submit" id="reg-btn">Зарегистрироваться</button>
+
+            <p class="auth-switch">Уже есть аккаунт? <a href="login.html">Войти</a></p>
+        </form>
+
+        <nav>
+            <a href="index.html">На главную</a>
+            <a href="about.html" target="_blank">Girls From Alushta</a>
+            <a href="contacts.html" target="_blank">Сугубое мнение</a>
+            <a href="baze.html" target="_blank">FAQ</a>
+        </nav>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        const form = document.getElementById('register-form');
+        const messageBox = document.getElementById('form-message');
+        const regBtn = document.getElementById('reg-btn');
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (password !== confirmPassword) {
+                messageBox.textContent = 'Ошибка: пароли не совпадают!';
+                messageBox.className = 'form-message error';
+                return;
+            }
+
+            regBtn.disabled = true;
+            regBtn.textContent = 'Проверка данных...';
+
+            try {
+                // 1. Проверяем, не занят ли логин
+                const userId = username.toLowerCase();
+                const userRef = db.collection('users').doc(userId);
+                const existingDoc = await userRef.get();
+
+                if (existingDoc.exists) {
+                    messageBox.textContent = 'Пользователь с таким логином уже существует!';
+                    messageBox.className = 'form-message error';
+                    regBtn.disabled = false;
+                    regBtn.textContent = 'Зарегистрироваться';
+                    return;
+                }
+
+                // 2. Проверяем, не зарегистрирована ли уже эта почта
+                const emailSnapshot = await db.collection('users').where('email', '==', email).get();
+                if (!emailSnapshot.empty) {
+                    messageBox.textContent = 'Аккаунт с такой электронной почтой уже существует!';
+                    messageBox.className = 'form-message error';
+                    regBtn.disabled = false;
+                    regBtn.textContent = 'Зарегистрироваться';
+                    return;
+                }
+
+                regBtn.textContent = 'Создание аккаунта...';
+
+                const newUser = {
+                    username: username,
+                    email: email,
+                    password: password,
+                    bio: 'Житель побережья Алушты',
+                    avatar: '',
+                    regDate: new Date().toLocaleDateString('ru-RU')
+                };
+
+                await userRef.set(newUser);
+                localStorage.setItem('alushta_user', username);
+
+                messageBox.textContent = 'Аккаунт создан! Переходим в профиль...';
+                messageBox.className = 'form-message success';
+
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 800);
+            } catch (error) {
+                console.error(error);
+                messageBox.textContent = 'Ошибка соединения с базой. Проверьте настройки Firestore.';
+                messageBox.className = 'form-message error';
+                regBtn.disabled = false;
+                regBtn.textContent = 'Зарегистрироваться';
+            }
+        });
+    </script>
+
+</body>
+</html>

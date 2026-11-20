@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль — Girls from Alushta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="site-logo">AlushtaGirls</div>
+    </header>
+
+    <main>
+        <h1 id="page-title">Личный кабинет</h1>
+
+        <section class="profile-box" id="profile-box">
+            <div class="profile-header">
+                <div class="avatar-wrapper">
+                    <div class="profile-avatar" id="profile-avatar">U</div>
+                    <label for="avatar-upload" class="avatar-edit-btn" id="avatar-edit-label" style="display: none;">
+                        📷 Фото
+                    </label>
+                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="profile-info">
+                    <h2 id="profile-name">Загрузка...</h2>
+                    <p class="profile-meta" id="profile-email"></p>
+                    <p class="profile-meta" id="profile-date"></p>
+                </div>
+            </div>
+
+            <div id="owner-bio-edit" style="display: none;">
+                <div class="form-group">
+                    <label for="profile-bio">Статус / О себе</label>
+                    <textarea id="profile-bio" rows="3" placeholder="Расскажите о себе..."></textarea>
+                </div>
+
+                <div id="bio-message" class="form-message"></div>
+
+                <div class="profile-actions">
+                    <button type="button" class="btn-submit" id="save-bio-btn">Сохранить изменения</button>
+                    <button type="button" class="btn-danger" onclick="logoutUser()">Выйти из аккаунта</button>
+                </div>
+            </div>
+
+            <div id="guest-bio-view" style="display: none;">
+                <p class="guest-bio-label">О пользователе:</p>
+                <p class="guest-bio-text" id="guest-bio-text">Загрузка...</p>
+            </div>
+        </section>
+
+        <section class="opinions-feed" id="user-opinions">
+            <h2 id="posts-heading">Публикации в «Сугубом мнении»</h2>
+            <div id="user-posts-list"><p class="empty-posts">Загрузка публикаций...</p></div>
+        </section>
+
+        <nav>
+            <a href="index.html">На главную</a>
+            <a href="about.html" target="_blank">Girls From Alushta</a>
+            <a href="contacts.html" target="_blank">Сугубое мнение</a>
+            <a href="baze.html" target="_blank">FAQ</a>
+        </nav>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        (async function initProfile() {
+            const currentUsername = getCurrentUsername();
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestedUsername = urlParams.get('user');
+
+            const targetUsername = requestedUsername || currentUsername;
+
+            if (!targetUsername) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const targetUser = await fetchUserByUsername(targetUsername);
+            const isOwner = currentUsername && currentUsername.toLowerCase() === targetUsername.toLowerCase();
+            const displayName = targetUser ? targetUser.username : targetUsername;
+
+            const avatarEl = document.getElementById('profile-avatar');
+            function renderAvatar(avatarData, name) {
+                if (avatarData) {
+                    avatarEl.innerHTML = `<img src="${avatarData}" alt="${name}" class="avatar-img">`;
+                } else {
+                    avatarEl.textContent = name.charAt(0).toUpperCase();
+                }
+            }
+
+            renderAvatar(targetUser?.avatar, displayName);
+            document.getElementById('profile-name').textContent = '@' + displayName;
+
+            if (isOwner) {
+                document.getElementById('page-title').textContent = 'Личный кабинет';
+                document.getElementById('profile-email').textContent = 'Email: ' + (targetUser?.email || 'не указан');
+                document.getElementById('profile-date').textContent = 'На сайте с: ' + (targetUser?.regDate || 'недавно');
+                document.getElementById('posts-heading').textContent = 'Мои публикации в «Сугубом мнении»';
+
+                document.getElementById('owner-bio-edit').style.display = 'block';
+                document.getElementById('avatar-edit-label').style.display = 'inline-block';
+                document.getElementById('profile-bio').value = targetUser?.bio || '';
+
+                // Загрузка и сжатие аватарки в облако
+                document.getElementById('avatar-upload').addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = async function() {
+                            const canvas = document.createElement('canvas');
+                            const size = 200;
+                            canvas.width = size;
+                            canvas.height = size;
+                            const ctx = canvas.getContext('2d');
+
+                            const minSide = Math.min(img.width, img.height);
+                            const sx = (img.width - minSide) / 2;
+                            const sy = (img.height - minSide) / 2;
+                            ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+
+                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+
+                            await db.collection('users').doc(displayName.toLowerCase()).update({
+                                avatar: compressedBase64
+                            });
+
+                            renderAvatar(compressedBase64, displayName);
+
+                            const bioMsg = document.getElementById('bio-message');
+                            bioMsg.textContent = 'Аватарка сохранена в облаке!';
+                            bioMsg.className = 'form-message success';
+                            setTimeout(() => { bioMsg.className = 'form-message'; }, 2500);
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                // Сохранение статуса в облако
+                document.getElementById('save-bio-btn').addEventListener('click', async () => {
+                    const newBio = document.getElementById('profile-bio').value.trim();
+                    await db.collection('users').doc(displayName.toLowerCase()).update({
+                        bio: newBio
+                    });
+
+                    const bioMsg = document.getElementById('bio-message');
+                    bioMsg.textContent = 'Профиль обновлён!';
+                    bioMsg.className = 'form-message success';
+                    setTimeout(() => { bioMsg.className = 'form-message'; }, 2500);
+                });
+            } else {
+                document.getElementById('page-title').textContent = 'Профиль пользователя';
+                document.getElementById('profile-email').style.display = 'none';
+                document.getElementById('profile-date').textContent = targetUser 
+                    ? 'На сайте с: ' + targetUser.regDate 
+                    : 'Пользователь не найден';
+                document.getElementById('posts-heading').textContent = 'Публикации @' + displayName;
+
+                document.getElementById('guest-bio-view').style.display = 'block';
+                document.getElementById('guest-bio-text').textContent = targetUser?.bio || 'Пользователь пока ничего не рассказал о себе.';
+            }
+
+            // Загружаем посты этого автора из облака
+            const postsSnapshot = await db.collection('opinions')
+                .where('authorLower', '==', displayName.toLowerCase())
+                .get();
+
+            const postsContainer = document.getElementById('user-posts-list');
+            postsContainer.innerHTML = '';
+
+            if (postsSnapshot.empty) {
+                postsContainer.innerHTML = '<p class="empty-posts">Пока нет ни одной публикации.</p>';
+            } else {
+                const posts = [];
+                postsSnapshot.forEach(doc => posts.push(doc.data()));
+                posts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                posts.forEach(post => {
+                    const card = document.createElement('article');
+                    card.className = 'opinion-card';
+                    card.innerHTML = `
+                        <div class="opinion-header">
+                            <span class="opinion-author">@${post.author}</span>
+                            <span class="opinion-date">${post.date}</span>
+                        </div>
+                        <p class="opinion-body">${post.text}</p>
+                    `;
+                    postsContainer.appendChild(card);
+                });
+            }
+        })();
+    </script>
+
+</body>
+</html>

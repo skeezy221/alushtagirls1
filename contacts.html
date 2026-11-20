@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сугубое мнение — Girls from Alushta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="site-logo">AlushtaGirls</div>
+    </header>
+
+    <main>
+        <h1>Сугубое мнение</h1>
+        <p>Субъективные заметки, истории и честный взгляд со стороны.</p>
+
+        <div class="guest-notice" id="guest-notice" style="display: none;">
+            <p>Публиковать мнения и ставить реакции могут только зарегистрированные участники.</p>
+            <div class="guest-notice-actions">
+                <a href="login.html" class="btn-submit">Войти в аккаунт</a>
+                <a href="registr.html" class="btn-outline">Регистрация</a>
+            </div>
+        </div>
+
+        <form class="opinion-form" id="opinion-form" style="display: none;">
+            <div class="form-group">
+                <label>Публикация от имени: <span id="current-author-badge" class="author-badge"></span></label>
+            </div>
+
+            <div class="form-group">
+                <label for="opinion-text">Ваше мнение</label>
+                <textarea id="opinion-text" rows="4" placeholder="Напишите всё, что думаете..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="publish-btn">Опубликовать мнение</button>
+        </form>
+
+        <section class="opinions-feed" id="opinions-feed">
+            <p class="empty-posts">Загрузка мнений...</p>
+        </section>
+
+        <nav>
+            <a href="index.html">На главную</a>
+            <a href="about.html" target="_blank">Girls From Alushta</a>
+            <a href="baze.html" target="_blank">FAQ</a>
+            <a href="registr.html" target="_blank">Регистрация</a>
+        </nav>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        const currentUsername = getCurrentUsername();
+        const guestNotice = document.getElementById('guest-notice');
+        const opinionForm = document.getElementById('opinion-form');
+        const textInput = document.getElementById('opinion-text');
+        const publishBtn = document.getElementById('publish-btn');
+        const feed = document.getElementById('opinions-feed');
+
+        if (currentUsername) {
+            opinionForm.style.display = 'block';
+            document.getElementById('current-author-badge').textContent = '@' + currentUsername;
+        } else {
+            guestNotice.style.display = 'block';
+        }
+
+        db.collection('opinions').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            feed.innerHTML = '';
+
+            if (snapshot.empty) {
+                feed.innerHTML = '<p class="empty-posts">Пока никто не оставил мнение. Станьте первым!</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const post = doc.data();
+                const postId = doc.id;
+                const likedBy = Array.isArray(post.likedBy) ? post.likedBy : [];
+
+                const article = document.createElement('article');
+                article.className = 'opinion-card';
+
+                const header = document.createElement('div');
+                header.className = 'opinion-header';
+
+                const authorLink = document.createElement('a');
+                authorLink.className = 'opinion-author';
+                authorLink.href = 'profile.html?user=' + encodeURIComponent(post.author);
+                authorLink.textContent = '@' + post.author;
+
+                const rightControls = document.createElement('div');
+                rightControls.className = 'opinion-controls';
+
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'opinion-date';
+                dateSpan.textContent = post.date;
+                rightControls.appendChild(dateSpan);
+
+                if (currentUsername && currentUsername.toLowerCase() === post.author.toLowerCase()) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'btn-delete-post';
+                    deleteBtn.textContent = 'Удалить';
+                    deleteBtn.onclick = async function() {
+                        await db.collection('opinions').doc(postId).delete();
+                    };
+                    rightControls.appendChild(deleteBtn);
+                }
+
+                const bodyP = document.createElement('p');
+                bodyP.className = 'opinion-body';
+                bodyP.textContent = post.text;
+
+                const footer = document.createElement('div');
+                footer.className = 'opinion-footer';
+
+                const likeBtn = document.createElement('button');
+                likeBtn.type = 'button';
+                likeBtn.className = 'btn-like';
+
+                const isLiked = currentUsername && likedBy.includes(currentUsername);
+                if (isLiked) {
+                    likeBtn.classList.add('liked');
+                }
+
+                likeBtn.innerHTML = `<span class="heart-icon">♥</span> <span class="like-count">${likedBy.length}</span>`;
+                likeBtn.onclick = async function() {
+                    if (!currentUsername) {
+                        alert('Войдите в аккаунт, чтобы оценивать публикации!');
+                        return;
+                    }
+                    const postRef = db.collection('opinions').doc(postId);
+                    if (isLiked) {
+                        await postRef.update({
+                            likedBy: firebase.firestore.FieldValue.arrayRemove(currentUsername)
+                        });
+                    } else {
+                        await postRef.update({
+                            likedBy: firebase.firestore.FieldValue.arrayUnion(currentUsername)
+                        });
+                    }
+                };
+
+                footer.appendChild(likeBtn);
+                header.appendChild(authorLink);
+                header.appendChild(rightControls);
+                article.appendChild(header);
+                article.appendChild(bodyP);
+                article.appendChild(footer);
+                feed.appendChild(article);
+            });
+        });
+
+        opinionForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            if (!currentUsername) return;
+
+            const text = textInput.value.trim();
+            if (!text) return;
+
+            publishBtn.disabled = true;
+            publishBtn.textContent = 'Публикация...';
+
+            try {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+
+                await db.collection('opinions').add({
+                    author: currentUsername,
+                    authorLower: currentUsername.toLowerCase(),
+                    text: text,
+                    date: dateStr,
+                    likedBy: [],
+                    createdAt: Date.now()
+                });
+
+                textInput.value = '';
+            } catch (err) {
+                console.error(err);
+                alert('Не удалось опубликовать мнение. Проверьте подключение.');
+            } finally {
+                publishBtn.disabled = false;
+                publishBtn.textContent = 'Опубликовать мнение';
+            }
+        });
+    </script>
+
+</body>
+</html>
